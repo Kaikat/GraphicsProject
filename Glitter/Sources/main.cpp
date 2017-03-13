@@ -14,9 +14,6 @@
 #include <model.hpp>
 #include <filesystem.hpp>
 
-
-//Testing
-//#include "CubeMap.hpp"
 #include "Renderer.hpp"
 
 
@@ -28,43 +25,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
-Camera camera(glm::vec3(0.f, 0.f, 2.f));
 Renderer renderer;
 
 int main(int argc, char * argv[]) {
 
 	GLFWwindow *mWindow = SetUpGLFW();
 
-	glEnable(GL_DEPTH_TEST);
-
-	// Create a sample shader that displays normal
-	Shader sampleShader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(), FileSystem::getPath("Shaders/geometry.frag.glsl").c_str());
-
-	// Load a model from obj file
-	Model sampleModel(FileSystem::getPath(MODEL).c_str());
+	renderer.SetCamera(glm::vec3(0.f, 0.f, 2.f));
+	renderer.SetWorldModel(FileSystem::getPath(MODEL).c_str());
 
     // Rendering Loop
+	double oldTime = glfwGetTime();
     while (glfwWindowShouldClose(mWindow) == false) 
 	{
 		glfwPollEvents();
-        // Background Fill Color
-        glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (GLfloat)mWidth / (GLfloat)mHeight, mNear, mFar);
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 model = glm::mat4();
-		model = glm::scale(model, glm::vec3(0.05f));    // The sponza model is too big, scale it first
-		model = glm::translate(model, glm::vec3(-1, 0, 0));
-
-		sampleShader.Use();
-		glUniformMatrix4fv(glGetUniformLocation(sampleShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(sampleShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(sampleShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		sampleModel.Draw(sampleShader);
+		renderer.Render();
+		renderer.Update(glfwGetTime() - oldTime);
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);
+		oldTime = glfwGetTime();
     }   
 	
 	glfwTerminate();
@@ -109,17 +89,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 
-	//TODO: Move to Renderer
-	// Camera movements
-	if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera.ProcessKeyboard(FORWARD, 0.1);
-	if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera.ProcessKeyboard(BACKWARD, 0.1);
-	if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera.ProcessKeyboard(LEFT, 0.1);
-	if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera.ProcessKeyboard(RIGHT, 0.1);
-
 	if (action == GLFW_PRESS)
 	{
 		renderer.OnKeyPressed(key);
@@ -130,33 +99,45 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
+int leftButtonState, rightButtonState;
+bool leftButtonPressed = false, rightButtonPressed = false;
 GLfloat lastX = 400, lastY = 300;
+
 bool firstMouse = true;
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-	if (state == GLFW_PRESS) {
-		if (firstMouse)
-		{
-			lastX = xpos;
-			lastY = ypos;
-			firstMouse = false;
-		}
+	int leftButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	int rightButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
 
-		GLfloat xoffset = xpos - lastX;
-		GLfloat yoffset = lastY - ypos;
-
-		lastX = xpos;
-		lastY = ypos;
-
-		camera.ProcessMouseMovement(xoffset, yoffset);
+	// It only matters when the buttons are first pressed because they continue to be pressed
+	if (!leftButtonPressed && leftButtonState == GLFW_PRESS)
+	{
+		renderer.OnMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 	}
-	if (state == GLFW_RELEASE) {
-		firstMouse = true;
+	if (leftButtonPressed && leftButtonState == GLFW_RELEASE)
+	{
+		renderer.OnMouseButtonReleased(GLFW_MOUSE_BUTTON_LEFT);
 	}
+	if (!rightButtonPressed && rightButtonState == GLFW_PRESS)
+	{
+		renderer.OnMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT);
+	}
+	if (rightButtonPressed && rightButtonState == GLFW_RELEASE)
+	{
+		renderer.OnMouseButtonReleased(GLFW_MOUSE_BUTTON_RIGHT);
+	}
+
+	leftButtonPressed = leftButtonState == GLFW_PRESS;
+	rightButtonPressed = rightButtonState == GLFW_PRESS;
+
+	renderer.OnMouseMoved(xpos - lastX, lastY - ypos);
+
+	lastX = xpos;
+	lastY = ypos;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	camera.ProcessMouseScroll(yoffset);
+	renderer.OnMouseScrolled(yoffset);
 }

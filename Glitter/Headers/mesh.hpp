@@ -9,6 +9,7 @@ using namespace std;
 // GL Includes
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "shader.hpp"
 
 
 struct Vertex {
