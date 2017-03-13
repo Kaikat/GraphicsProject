@@ -14,41 +14,26 @@
 #include <model.hpp>
 #include <filesystem.hpp>
 
+
+//Testing
+//#include "CubeMap.hpp"
+#include "Renderer.hpp"
+
+
 #define MODEL "Resources/crytek_sponza/sponza.obj"
 
+// Main's Functions
+GLFWwindow* SetUpGLFW();
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 Camera camera(glm::vec3(0.f, 0.f, 2.f));
+Renderer renderer;
 
 int main(int argc, char * argv[]) {
 
-    // Load GLFW and Create a Window
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
-
-    // Check for Valid Context
-    if (mWindow == nullptr) {
-        fprintf(stderr, "Failed to Create OpenGL Context");
-        return EXIT_FAILURE;
-    }
-
-    // Create Context and Load OpenGL Functions
-    glfwMakeContextCurrent(mWindow);
-    gladLoadGL();
-    fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
-
-	// Set callback functions
-	glfwSetKeyCallback(mWindow, key_callback);
-	glfwSetCursorPosCallback(mWindow, mouse_callback);
-	glfwSetScrollCallback(mWindow, scroll_callback);
-	//glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	GLFWwindow *mWindow = SetUpGLFW();
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -86,12 +71,45 @@ int main(int argc, char * argv[]) {
     return EXIT_SUCCESS;
 }
 
+GLFWwindow* SetUpGLFW()
+{
+	// Load GLFW and Create a Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	GLFWwindow *mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
+
+	// Check for Valid Context
+	if (mWindow == nullptr)
+	{
+		fprintf(stderr, "Failed to Create OpenGL Context");
+		exit(1);
+	}
+
+	// Create Context and Load OpenGL Functions
+	glfwMakeContextCurrent(mWindow);
+	gladLoadGL();
+	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
+
+	// Set callback functions
+	glfwSetKeyCallback(mWindow, key_callback);
+	glfwSetCursorPosCallback(mWindow, mouse_callback);
+	glfwSetScrollCallback(mWindow, scroll_callback);
+	return mWindow;
+}
+
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
 	if ((key == GLFW_KEY_ESCAPE || key == GLFW_KEY_Q) && action == GLFW_PRESS)
+	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
 
+	//TODO: Move to Renderer
 	// Camera movements
 	if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
 		camera.ProcessKeyboard(FORWARD, 0.1);
@@ -101,6 +119,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		camera.ProcessKeyboard(LEFT, 0.1);
 	if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
 		camera.ProcessKeyboard(RIGHT, 0.1);
+
+	if (action == GLFW_PRESS)
+	{
+		renderer.OnKeyPressed(key);
+	}
+	if (action == GLFW_RELEASE)
+	{
+		renderer.OnKeyReleased(key);
+	}
 }
 
 GLfloat lastX = 400, lastY = 300;
