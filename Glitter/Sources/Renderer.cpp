@@ -5,9 +5,9 @@
 
 Renderer::Renderer()
 {
-	lights[0] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0);
-	lights[1] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0);
-	lights[2] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0);
+	lights[0] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0);
+	lights[1] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0);
+	lights[2] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0);
 }
 
 void Renderer::SetCamera(glm::vec3 cameraPosition)
@@ -48,7 +48,7 @@ void Renderer::Render()
 	worldModel->Draw(*sampleShader);*/
 
 	geometryStage->Pass(*worldModel, model, view, projection);
-	lightingStage->Pass(lights, *worldModel, model);
+	lightingStage->Pass(lights, *worldModel, model, view, *geometryStage);
 }
 
 void Renderer::Update(float deltaTime)

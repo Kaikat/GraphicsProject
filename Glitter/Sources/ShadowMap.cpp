@@ -1,5 +1,6 @@
 
 #include "ShadowMap.hpp"
+#include "Constants.hpp"
 
 #define CUBE_DIMENSION 1024
 
