@@ -15,6 +15,9 @@ void Renderer::SetCamera(glm::vec3 cameraPosition)
 	camera = unique_ptr<Camera>(new Camera(cameraPosition));
 	projection = glm::perspective(glm::radians(camera->Zoom), (GLfloat)mWidth / (GLfloat)mHeight, mNear, mFar);
 	view = camera->GetViewMatrix();
+
+	for (int i = 0; i < 3; i++)
+		lights[i].Init();
 }
 
 void Renderer::SetWorldModel(string filename)
@@ -25,9 +28,10 @@ void Renderer::SetWorldModel(string filename)
 	model = glm::scale(model, glm::vec3(0.05f));    // The sponza model is too big, scale it first
 	model = glm::translate(model, glm::vec3(-1, 0, 0));
 
-	sampleShader = unique_ptr<Shader>(new Shader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(), FileSystem::getPath("Shaders/geometry.frag.glsl").c_str()));
-	glEnable(GL_DEPTH_TEST);
-
+	//sampleShader = unique_ptr<Shader>(new Shader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(), FileSystem::getPath("Shaders/geometry.frag.glsl").c_str()));
+	geometryStage = unique_ptr<GeometryStage>(new GeometryStage());
+	lightingStage = unique_ptr<LightingStage>(new LightingStage());
+	//glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::Render()
@@ -35,12 +39,16 @@ void Renderer::Render()
 	// Background Fill Color
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, mWidth, mHeight);
 
-	sampleShader->Use();
+	/*sampleShader->Use();
 	glUniformMatrix4fv(glGetUniformLocation(sampleShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(sampleShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(sampleShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	worldModel->Draw(*sampleShader);
+	worldModel->Draw(*sampleShader);*/
+
+	geometryStage->Pass(*worldModel, model, view, projection);
+	lightingStage->Pass(lights, *worldModel, model);
 }
 
 void Renderer::Update(float deltaTime)
@@ -63,17 +71,6 @@ void Renderer::Update(float deltaTime)
 	{
 		camera->ProcessKeyboard(RIGHT, deltaTime);
 	}
-}
-
-
-void Renderer::LightPass()
-{
-
-}
-
-void Renderer::GeometryPass()
-{
-
 }
 
 ////////////////////////////////////////////

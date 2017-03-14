@@ -11,6 +11,8 @@
 #include <memory>
 #include <map>
 
+#include "GeometryStage.hpp"
+#include "LightingStage.hpp"
 
 class Renderer
 {
@@ -25,9 +27,13 @@ class Renderer
 		Light lights[3];
 		std::unique_ptr<Shader> sampleShader;
 
+		////////////// Passes | Stages //////////////
+		std::unique_ptr<GeometryStage> geometryStage;
+		std::unique_ptr<LightingStage> lightingStage;
+
+		////////////// Input //////////////
 		map<int, bool> keyPressed;
 		map<int, bool> mouseButtonPressed;
-		
 		bool IsKeyPressed(int key);
 		bool IsMouseButtonPressed(int button);
 
@@ -38,12 +44,10 @@ class Renderer
 		void Update(float deltaTime);
 		void Render();
 
-		void GeometryPass();
-		void LightPass();
-
-		//Input 
+		///////////// Input ////////////// 
 		void OnKeyPressed(int key);
 		void OnKeyReleased(int key);
+
 		void OnMouseButtonPressed(int button);
 		void OnMouseButtonReleased(int button);
 		void OnMouseMoved(float deltaX, float deltaY);

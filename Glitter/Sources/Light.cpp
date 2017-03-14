@@ -6,3 +6,8 @@ Light::Light(glm::vec3 lightPosition, glm::vec3 lightColor, float lightIntensity
 	color = lightColor;
 	intensity = lightIntensity;
 }
+
+void Light::Init()
+{
+	shadowMap.Init();
+}
