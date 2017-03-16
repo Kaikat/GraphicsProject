@@ -48,7 +48,7 @@ void Renderer::Render()
 	worldModel->Draw(*sampleShader);*/
 
 	geometryStage->Pass(*worldModel, model, view, projection);
-	lightingStage->Pass(lights, *worldModel, model, view, *geometryStage);
+	lightingStage->Pass(lights, *worldModel, model, view, projection, *geometryStage);
 }
 
 void Renderer::Update(float deltaTime)

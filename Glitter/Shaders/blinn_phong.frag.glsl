@@ -1,26 +1,33 @@
 #version 330 core
 out vec4 FragColor;
 in vec2 TexCoords;
-//in vec3 FragPos;
 
 uniform mat4 view;
-
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
+const int NR_LIGHTS = 3;
+
 struct Light {
     vec3 Position;
     vec3 Color;
+    float Intensity;
 };
-const int NR_LIGHTS = 3;
 uniform Light lights[NR_LIGHTS];
-//uniform vec3 viewPos;
+uniform samplerCube shadowMap[NR_LIGHTS];
+uniform float farPlane;
 
+float isShadow(int index)
+{
+    float bias = 0.1;
+    vec3 FragPosViewSpace = (inverse(view) * vec4(texture(gPosition, TexCoords).rgb, 1.0)).xyz;
+    float shadowDepth = bias + (texture(shadowMap[index], FragPosViewSpace.xyz - lights[index].Position).r * farPlane);
+    float currentDepth = length(FragPosViewSpace.xyz - lights[index].Position);
+    return currentDepth > shadowDepth ? 0.0 : 1.0;
+}
 void main()
-{          
-    //vec3 viewPos = view * ;
-       
+{                 
     // Retrieve data from G-buffer
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
@@ -30,14 +37,17 @@ void main()
     // Then calculate lighting as usual
     vec3 lighting = Albedo * 0.1; // hard-coded ambient component
     vec3 viewDir = normalize(-FragPos);
-    for(int i = 0; i < NR_LIGHTS; ++i)
+
+//TTTTTTTTTTTTTTTTTTTTEMP CHANGE BACK TO NR_LIGHTS
+    for(int i = 0; i < 3; ++i)
     {
         // Diffuse
+        float distanceFromLight = length(lights[i].Position - FragPos);
         vec3 lightDir = normalize(lights[i].Position - FragPos);
         vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Albedo * lights[i].Color;
-        lighting += diffuse;
+        
+        lighting += 3 * diffuse * isShadow(i) / distanceFromLight;
     }
-    
     FragColor = vec4(lighting, 1.0);
 }
 
