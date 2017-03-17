@@ -14,6 +14,8 @@ LightingStage::LightingStage()
 		FileSystem::getPath("Shaders/blinn_phong.frag.glsl").c_str());
 	ssaoShader = Shader(FileSystem::getPath("Shaders/ssao.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
+	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
 
 	srand(14);
 	for (int i = 0; i < NUMBER_OF_SAMPLES * 3; i++)
@@ -32,6 +34,17 @@ LightingStage::LightingStage()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfResultTextureID, 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+
+	glGenFramebuffers(1, &ssaoResultFrameBufferID);
+	glGenTextures(1, &ssaoResultTextureID);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoResultFrameBufferID);
+	glBindTexture(GL_TEXTURE_2D, ssaoResultTextureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoResultTextureID, 0);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	// Create the quad
@@ -103,11 +116,10 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	}
 
 	glViewport(0, 0, mWidth, mHeight);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Use the shadow map results with the brdf to get lighting with shadows
 	glBindFramebuffer(GL_FRAMEBUFFER, brdfResultFrameBufferID); //put the results in this framebuffer rather than on the screen
-
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	brdfShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(brdfShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -131,7 +143,10 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[0].Color"), 1, glm::value_ptr(lights[0].Color()));
 	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[1].Color"), 1, glm::value_ptr(lights[1].Color()));
 	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[2].Color"), 1, glm::value_ptr(lights[2].Color()));
-	
+	glUniform1f(glGetUniformLocation(brdfShader.Program, "lights[0].Intensity"), lights[0].Intensity());
+	glUniform1f(glGetUniformLocation(brdfShader.Program, "lights[1].Intensity"), lights[1].Intensity());
+	glUniform1f(glGetUniformLocation(brdfShader.Program, "lights[2].Intensity"), lights[2].Intensity());
+
 	// Shadow Map Stuff
 	glUniform1f(glGetUniformLocation(brdfShader.Program, "farPlane"), mFar);
 
@@ -151,19 +166,34 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 
 	// Use the results of the brdf with ssao
 	ssaoShader.Use();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoResultFrameBufferID);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUniformMatrix4fv(glGetUniformLocation(ssaoShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniform1fv(glGetUniformLocation(ssaoShader.Program, "randomPoints"), NUMBER_OF_SAMPLES * 3, randomPoints);
 
 	glUniform1i(glGetUniformLocation(ssaoShader.Program, "gPosition"), 0);
 	glUniform1i(glGetUniformLocation(ssaoShader.Program, "gNormal"), 2);
-
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, brdfResultTextureID);
 	//glUniform1i(glGetUniformLocation(ssaoShader.Program, "gAlbedoSpec"), 6);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	//Combine the results of the BRDF and the SSAO Shaders
+	lightingResultsShader.Use();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, brdfResultTextureID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, ssaoResultTextureID);
+
+	glUniform1i(glGetUniformLocation(lightingResultsShader.Program, "brdfResult"), 0);
+	glUniform1i(glGetUniformLocation(lightingResultsShader.Program, "ssaoResult"), 1);
+	
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	
 	glBindVertexArray(0);
 	glDisable(GL_DEPTH_TEST);
 }

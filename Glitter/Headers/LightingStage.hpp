@@ -17,6 +17,7 @@ class LightingStage
 		Shader shadowMapShader;
 		Shader brdfShader;
 		Shader ssaoShader; //screen space ambient occlusion
+		Shader lightingResultsShader;
 
 		//The quad that will be drawn to for deferred rendering
 		GLuint vertexArrayBufferID;
@@ -24,6 +25,9 @@ class LightingStage
 		//The buffer and texture that will hold the result of deferred rendering with a brdf
 		GLuint brdfResultFrameBufferID;
 		GLuint brdfResultTextureID;
+
+		GLuint ssaoResultFrameBufferID;
+		GLuint ssaoResultTextureID;
 
 		GLfloat randomPoints[NUMBER_OF_SAMPLES * 3];
 		//The texture ID for the ssao 
