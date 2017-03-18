@@ -16,7 +16,7 @@ void Renderer::SetCamera(glm::vec3 cameraPosition)
 	projection = glm::perspective(glm::radians(camera->Zoom), (GLfloat)mWidth / (GLfloat)mHeight, mNear, mFar);
 	view = camera->GetViewMatrix();
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < TOTAL_LIGHTS; i++)
 		lights[i].Init();
 }
 

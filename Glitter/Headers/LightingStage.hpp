@@ -4,12 +4,14 @@
 #include "shader.hpp"
 #include "model.hpp"
 #include "GeometryStage.hpp"
+#include "Constants.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
 
 #define NUMBER_OF_SAMPLES 64
+#define VEC_SAMPLE_POINT 3
 
 class LightingStage
 {
@@ -29,12 +31,7 @@ class LightingStage
 		GLuint ssaoResultFrameBufferID;
 		GLuint ssaoResultTextureID;
 
-		GLfloat randomPoints[NUMBER_OF_SAMPLES * 3];
-		//The texture ID for the ssao 
-
-		//GLuint quadPositionBufferID;
-		//GLuint quadUVBufferID;
-		//GLuint quadPositionIndexBufferID;
+		GLfloat randomPoints[NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT];
 
 	public:
 		LightingStage();

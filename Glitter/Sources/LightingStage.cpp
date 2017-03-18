@@ -1,9 +1,7 @@
 
 #include "LightingStage.hpp"
 #include "filesystem.hpp"
-#include "Constants.hpp"
 
-#define TOTAL_LIGHTS 3
 #define CUBE_FACES 6
 
 LightingStage::LightingStage()
@@ -18,7 +16,7 @@ LightingStage::LightingStage()
 		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
 
 	srand(14);
-	for (int i = 0; i < NUMBER_OF_SAMPLES * 3; i++)
+	for (int i = 0; i < NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT; i++)
 	{
 		//diameter 2, radius 1 so that it is within a unit sphere
 		randomPoints[i] = 2.0f * rand() / (float)RAND_MAX - 1.0f;
@@ -48,18 +46,6 @@ LightingStage::LightingStage()
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	// Create the quad
-	glm::vec3 quadPositions[4];
-	quadPositions[0] = glm::vec3(-1.0f, -1.0f, 0.0f);
-	quadPositions[1] = glm::vec3(-1.0f, 1.0f, 0.0f);
-	quadPositions[2] = glm::vec3(1.0f, 1.0f, 0.0f);
-	quadPositions[3] = glm::vec3(1.0f, -1.0f, 0.0f);
-
-	float quadUVs[8] = { 0.0f, 0.0f,
-						 0.0f, 1.0f,
-						1.0f, 1.0f,
-						 1.0f, 0.0f };
-
-	GLuint quadTriangleIndeces[6] = { 0, 1, 2, 2, 3, 0};
 	GLuint quadPositionBufferID, quadUVBufferID, quadPositionIndexBufferID;
 
 	//put positions, uvs, indeces in vertex array object
@@ -68,19 +54,19 @@ LightingStage::LightingStage()
 
 	glGenBuffers(1, &quadPositionBufferID);
 	glBindBuffer(GL_ARRAY_BUFFER, quadPositionBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadPositions), quadPositions, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadPositions), QuadPositions, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
 	glEnableVertexAttribArray(0);
 
 	glGenBuffers(1, &quadUVBufferID);
 	glBindBuffer(GL_ARRAY_BUFFER, quadUVBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadUVs), quadUVs, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadUVs), QuadUVs, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
 	glEnableVertexAttribArray(1);
 
 	glGenBuffers(1, &quadPositionIndexBufferID);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadPositionIndexBufferID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadTriangleIndeces), quadTriangleIndeces, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(QuadTriangleIndeces), QuadTriangleIndeces, GL_STATIC_DRAW);
 	glBindVertexArray(0);
 }
 
@@ -95,8 +81,8 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 		for (int cubeFace = 0; cubeFace < CUBE_FACES; cubeFace++)
 		{
 			glm::mat4 lightView = glm::lookAt(lights[i].Position(),
-				lights[i].Position() + lights[i].shadowMap.cubeMap.GetCubeOrientation(cubeFace),
-				lights[i].shadowMap.cubeMap.GetCubeUpDirection(cubeFace));
+				lights[i].Position() + CubeOrientations[cubeFace],
+				CubeUpDirections[cubeFace]);
 			glm::mat4 lightSpace = lightProjection * lightView;
 			lights[i].shadowMap.cubeMap.CreateFace(cubeFace);
 			GLuint buffID = lights[i].shadowMap.cubeMap.GetFrameBufferID();
@@ -171,7 +157,7 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUniformMatrix4fv(glGetUniformLocation(ssaoShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniform1fv(glGetUniformLocation(ssaoShader.Program, "randomPoints"), NUMBER_OF_SAMPLES * 3, randomPoints);
+	glUniform1fv(glGetUniformLocation(ssaoShader.Program, "randomPoints"), NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT, randomPoints);
 
 	glUniform1i(glGetUniformLocation(ssaoShader.Program, "gPosition"), 0);
 	glUniform1i(glGetUniformLocation(ssaoShader.Program, "gNormal"), 2);
