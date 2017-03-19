@@ -10,28 +10,39 @@ Renderer::Renderer()
 	lights[2] = Light(glm::vec3(0.0f, 30.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0);
 }
 
+void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float worldModelScale)
+{
+	SetCamera(cameraPosition);
+	SetWorldModel(worldModelFilename, worldModelScale);
+	InitLights();
+
+	//Initialize Stages
+	geometryStage = unique_ptr<GeometryStage>(new GeometryStage());
+	lightingStage = unique_ptr<LightingStage>(new LightingStage());
+}
+
 void Renderer::SetCamera(glm::vec3 cameraPosition)
 {
 	camera = unique_ptr<Camera>(new Camera(cameraPosition));
 	projection = glm::perspective(glm::radians(camera->Zoom), (GLfloat)mWidth / (GLfloat)mHeight, mNear, mFar);
 	view = camera->GetViewMatrix();
-
-	for (int i = 0; i < TOTAL_LIGHTS; i++)
-		lights[i].Init();
 }
 
-void Renderer::SetWorldModel(string filename)
+void Renderer::SetWorldModel(string filename, float scale)
 {
 	// The world doesn't move or change so this only has to be set once
 	worldModel = unique_ptr<Model>(new Model(filename));
 	model = glm::mat4();
-	model = glm::scale(model, glm::vec3(0.05f));    // The sponza model is too big, scale it first
+	model = glm::scale(model, glm::vec3(scale));    // The sponza model is too big, scale it first
 	model = glm::translate(model, glm::vec3(-1, 0, 0));
+}
 
-	//sampleShader = unique_ptr<Shader>(new Shader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(), FileSystem::getPath("Shaders/geometry.frag.glsl").c_str()));
-	geometryStage = unique_ptr<GeometryStage>(new GeometryStage());
-	lightingStage = unique_ptr<LightingStage>(new LightingStage());
-	//glEnable(GL_DEPTH_TEST);
+void Renderer::InitLights()
+{
+	for (int i = 0; i < TOTAL_LIGHTS; i++)
+	{
+		lights[i].Init();
+	}
 }
 
 void Renderer::Render()
@@ -40,12 +51,6 @@ void Renderer::Render()
 	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, mWidth, mHeight);
-
-	/*sampleShader->Use();
-	glUniformMatrix4fv(glGetUniformLocation(sampleShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-	glUniformMatrix4fv(glGetUniformLocation(sampleShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(sampleShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	worldModel->Draw(*sampleShader);*/
 
 	geometryStage->Pass(*worldModel, model, view, projection);
 	lightingStage->Pass(lights, *worldModel, model, view, projection, *geometryStage);

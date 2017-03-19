@@ -10,6 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
 
+#include "Texture2D.hpp"
+
 #define NUMBER_OF_SAMPLES 64
 #define VEC_SAMPLE_POINT 3
 
@@ -26,14 +28,22 @@ class LightingStage
 
 		//The buffer and texture that will hold the result of deferred rendering with a brdf
 		GLuint brdfResultFrameBufferID;
-		GLuint brdfResultTextureID;
+		Texture2D brdfTexture;
 
+		//The buffer and texture that will hold the result of screen space ambient occlusion (ssao)
 		GLuint ssaoResultFrameBufferID;
-		GLuint ssaoResultTextureID;
+		Texture2D ssaoTexture;
 
 		GLfloat randomPoints[NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT];
 
 	public:
 		LightingStage();
 		void Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
+
+	private:
+		void LoadShaders();
+		void GenerateRandomSamplePoints();
+		void CreateQuadVertexArrayObject();
+		void SetupBRDFFramebuffer();
+		void SetupSSAOFramebuffer();
 };

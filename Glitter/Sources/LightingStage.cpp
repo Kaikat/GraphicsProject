@@ -6,68 +6,11 @@
 
 LightingStage::LightingStage()
 {
-	shadowMapShader = Shader(FileSystem::getPath("Shaders/shadow_map.vert.glsl").c_str(),
-		FileSystem::getPath("Shaders/shadow_map.frag.glsl").c_str());
-	brdfShader = Shader(FileSystem::getPath("Shaders/blinn_phong.vert.glsl").c_str(),
-		FileSystem::getPath("Shaders/blinn_phong.frag.glsl").c_str());
-	ssaoShader = Shader(FileSystem::getPath("Shaders/ssao.vert.glsl").c_str(),
-		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
-	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
-		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
-
-	srand(14);
-	for (int i = 0; i < NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT; i++)
-	{
-		//diameter 2, radius 1 so that it is within a unit sphere
-		randomPoints[i] = 2.0f * rand() / (float)RAND_MAX - 1.0f;
-	}
-
-	glGenFramebuffers(1, &brdfResultFrameBufferID);
-	glGenTextures(1, &brdfResultTextureID);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, brdfResultFrameBufferID); //put the results in this framebuffer rather than on the screen
-	//BRDF Texture attachment to draw to
-	glBindTexture(GL_TEXTURE_2D, brdfResultTextureID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfResultTextureID, 0);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-
-	glGenFramebuffers(1, &ssaoResultFrameBufferID);
-	glGenTextures(1, &ssaoResultTextureID);
-	glBindFramebuffer(GL_FRAMEBUFFER, ssaoResultFrameBufferID);
-	glBindTexture(GL_TEXTURE_2D, ssaoResultTextureID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoResultTextureID, 0);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	// Create the quad
-	GLuint quadPositionBufferID, quadUVBufferID, quadPositionIndexBufferID;
-
-	//put positions, uvs, indeces in vertex array object
-	glGenVertexArrays(1, &vertexArrayBufferID);
-	glBindVertexArray(vertexArrayBufferID);
-
-	glGenBuffers(1, &quadPositionBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, quadPositionBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadPositions), QuadPositions, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
-	glEnableVertexAttribArray(0);
-
-	glGenBuffers(1, &quadUVBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, quadUVBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadUVs), QuadUVs, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
-	glEnableVertexAttribArray(1);
-
-	glGenBuffers(1, &quadPositionIndexBufferID);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadPositionIndexBufferID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(QuadTriangleIndeces), QuadTriangleIndeces, GL_STATIC_DRAW);
-	glBindVertexArray(0);
+	LoadShaders();
+	GenerateRandomSamplePoints();
+	CreateQuadVertexArrayObject();
+	SetupBRDFFramebuffer();
+	SetupSSAOFramebuffer();
 }
 
 void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
@@ -171,9 +114,9 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, brdfResultTextureID);
+	glBindTexture(GL_TEXTURE_2D, brdfTexture.GetTextureID());
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, ssaoResultTextureID);
+	glBindTexture(GL_TEXTURE_2D, ssaoTexture.GetTextureID());
 
 	glUniform1i(glGetUniformLocation(lightingResultsShader.Program, "brdfResult"), 0);
 	glUniform1i(glGetUniformLocation(lightingResultsShader.Program, "ssaoResult"), 1);
@@ -182,4 +125,72 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	
 	glBindVertexArray(0);
 	glDisable(GL_DEPTH_TEST);
+}
+
+void LightingStage::LoadShaders()
+{
+	shadowMapShader = Shader(FileSystem::getPath("Shaders/shadow_map.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/shadow_map.frag.glsl").c_str());
+	brdfShader = Shader(FileSystem::getPath("Shaders/blinn_phong.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/blinn_phong.frag.glsl").c_str());
+	ssaoShader = Shader(FileSystem::getPath("Shaders/ssao.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
+	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
+}
+
+void LightingStage::GenerateRandomSamplePoints()
+{
+	srand(14);
+	for (int i = 0; i < NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT; i++)
+	{
+		//diameter 2, radius 1 so that it is within a unit sphere
+		randomPoints[i] = 2.0f * rand() / (float)RAND_MAX - 1.0f;
+	}
+}
+
+void LightingStage::CreateQuadVertexArrayObject()
+{
+	GLuint quadPositionBufferID, quadUVBufferID, quadPositionIndexBufferID;
+
+	//put positions, uvs, indeces in vertex array object
+	glGenVertexArrays(1, &vertexArrayBufferID);
+	glBindVertexArray(vertexArrayBufferID);
+
+	glGenBuffers(1, &quadPositionBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, quadPositionBufferID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadPositions), QuadPositions, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &quadUVBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, quadUVBufferID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadUVs), QuadUVs, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
+	glEnableVertexAttribArray(1);
+
+	glGenBuffers(1, &quadPositionIndexBufferID);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadPositionIndexBufferID);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(QuadTriangleIndeces), QuadTriangleIndeces, GL_STATIC_DRAW);
+	glBindVertexArray(0);
+}
+
+void LightingStage::SetupBRDFFramebuffer()
+{
+	//put the brdf's results in this framebuffer's color attachment rather than on the screen
+	glGenFramebuffers(1, &brdfResultFrameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, brdfResultFrameBufferID); 
+	brdfTexture.CreateTexture(mWidth, mHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfTexture.GetTextureID(), 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+}
+
+void LightingStage::SetupSSAOFramebuffer()
+{
+	//put ssao results in this framebuffer's color attachment rather than on the screen
+	glGenFramebuffers(1, &ssaoResultFrameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoResultFrameBufferID);
+	ssaoTexture.CreateTexture(mWidth, mHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoTexture.GetTextureID(), 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }

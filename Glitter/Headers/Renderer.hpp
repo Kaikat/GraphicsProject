@@ -37,10 +37,14 @@ class Renderer
 		bool IsKeyPressed(int key);
 		bool IsMouseButtonPressed(int button);
 
+		////////////// Other //////////////
+		void SetWorldModel(string filename, float scale);
+		void SetCamera(glm::vec3 cameraPosition);
+		void InitLights();
+
 	public:
 		Renderer();
-		void SetWorldModel(string filename);
-		void SetCamera(glm::vec3 cameraPosition);
+		void Init(glm::vec3 cameraPosition, string worldModelFilename, float worldModelScale = 1.0f);
 		void Update(float deltaTime);
 		void Render();
 
