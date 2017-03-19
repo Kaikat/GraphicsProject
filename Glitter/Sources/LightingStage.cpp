@@ -108,15 +108,21 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	//Skybox
 	// bind the source framebuffer and select a color attachment to copy from
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, geometryStage.GetGBufferID());
-	glReadBuffer(GL_DEPTH_ATTACHMENT);
 
 	// bind the destination framebuffer and select the color attachments to copy to
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glDrawBuffer(GL_DEPTH_ATTACHMENT);
 
 	// copy
 	glBlitFramebuffer(0, 0, mWidth, mHeight, 0, 0, mWidth, mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	skyboxShader.Use();
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST);
 
+	glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glBindVertexArray(skyboxVAO);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.GetTextureID());
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glBindVertexArray(0);
 }
@@ -131,8 +137,8 @@ void LightingStage::LoadShaders()
 		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
 	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
-	//skyboxShader = Shader(FileSystem::getPath("Shaders/skybox.vert.glsl").c_str(),
-		//FileSystem::getPath("Shaders/skybox.frag.glsl").c_str());
+	skyboxShader = Shader(FileSystem::getPath("Shaders/skybox.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/skybox.frag.glsl").c_str());
 }
 
 void LightingStage::GenerateRandomSamplePoints()
@@ -194,4 +200,16 @@ void LightingStage::SetupSSAOFramebuffer()
 void LightingStage::SetupSkyBox()
 {
 	skybox.Init(SKYBOX_PATH, SKYBOX_FILE_EXTENSION);
+
+	GLuint cubePositionBufferID, quadUVBufferID, quadPositionIndexBufferID;
+
+	//put positions, uvs, indeces in vertex array object
+	glGenVertexArrays(1, &skyboxVAO);
+	glBindVertexArray(skyboxVAO);
+
+	glGenBuffers(1, &cubePositionBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, cubePositionBufferID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
+	glEnableVertexAttribArray(0);
 }

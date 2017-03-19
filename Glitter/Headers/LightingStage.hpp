@@ -39,6 +39,7 @@ class LightingStage
 		GLfloat randomPoints[NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT];
 
 		//Skybox
+		GLuint skyboxVAO;
 		SkyBox skybox;
 
 	public:
