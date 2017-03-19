@@ -18,8 +18,8 @@ class Light
 		glm::vec3 Position() { return position; };
 		glm::vec3 Color() { return color; };
 		float Intensity() { return intensity; };
-		GLuint GetShadowMapTextureID() { return shadowMap.cubeMap.GetTextureID(); };
-		GLuint GetShadowMapFrameBufferID() { return shadowMap.cubeMap.GetFrameBufferID(); };
+		GLuint GetShadowMapTextureID() { return shadowMap.GetTextureID(); };
+		GLuint GetShadowMapFrameBufferID() { return shadowMap.GetFrameBufferID(); };
 		void Init();
 
 		void CreateShadowMap(Shader shadowMapShader, Model model, glm::mat4 modelMatrix);

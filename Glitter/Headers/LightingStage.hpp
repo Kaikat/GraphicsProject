@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 
 #include "Texture2D.hpp"
+#include "SkyBox.hpp"
 
 #define NUMBER_OF_SAMPLES 64
 #define VEC_SAMPLE_POINT 3
@@ -22,6 +23,7 @@ class LightingStage
 		Shader brdfShader;
 		Shader ssaoShader; //screen space ambient occlusion
 		Shader lightingResultsShader;
+		Shader skyboxShader;
 
 		//The quad that will be drawn to for deferred rendering
 		GLuint vertexArrayBufferID;
@@ -36,6 +38,9 @@ class LightingStage
 
 		GLfloat randomPoints[NUMBER_OF_SAMPLES * VEC_SAMPLE_POINT];
 
+		//Skybox
+		SkyBox skybox;
+
 	public:
 		LightingStage();
 		void Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
@@ -46,4 +51,5 @@ class LightingStage
 		void CreateQuadVertexArrayObject();
 		void SetupBRDFFramebuffer();
 		void SetupSSAOFramebuffer();
+		void SetupSkyBox();
 };

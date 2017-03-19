@@ -20,6 +20,7 @@ class GeometryStage
 	public:
 		GeometryStage();
 		void Pass(Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+		GLuint GetGBufferID() { return gBufferID; };
 		GLuint GetPositionTextureID() { return positionTextureID; };
 		GLuint GetColorTextureID() { return colorTextureID; };
 		GLuint GetNormalTextureID() { return normalTextureID; };

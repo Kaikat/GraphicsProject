@@ -8,10 +8,13 @@
 class ShadowMap
 {
 	private:
-	public:
 		CubeMap cubeMap;
+
+	public:
 
 		ShadowMap();
 		void Init();
 		void CreateShadowMap(Shader shadowMapShader, Model model, glm::vec3 lightPosition, glm::mat4 modelMatrix);
+		GLuint GetTextureID() { return cubeMap.GetTextureID(); };
+		GLuint GetFrameBufferID() { return cubeMap.GetFrameBufferID(); };
 };

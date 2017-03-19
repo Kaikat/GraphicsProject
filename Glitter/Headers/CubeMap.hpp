@@ -14,7 +14,7 @@ class CubeMap
 	public:
 		CubeMap() {};
 		CubeMap(int cubeWidth);
-		void GenTextures();
+		void Init(GLint internalFormat, GLenum format, GLenum type, unsigned char **imageData = NULL);
 		GLuint GetTextureID() { return cubeMapTextureID; };
 		GLuint GetFrameBufferID() { return cubeMapFrameBufferID; };
 		void CreateFace(int cubeFace);

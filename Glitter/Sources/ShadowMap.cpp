@@ -12,7 +12,7 @@ ShadowMap::ShadowMap()
 
 void ShadowMap::Init()
 {
-	cubeMap.GenTextures();
+	cubeMap.Init(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 }
 
 void ShadowMap::CreateShadowMap(Shader shadowMapShader, Model model, glm::vec3 lightPosition, glm::mat4 modelMatrix)

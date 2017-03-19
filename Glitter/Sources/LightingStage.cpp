@@ -2,6 +2,9 @@
 #include "LightingStage.hpp"
 #include "filesystem.hpp"
 
+const string SKYBOX_PATH = "Resources/MountainSkybox/";
+const string SKYBOX_FILE_EXTENSION = ".jpg";
+
 LightingStage::LightingStage()
 {
 	LoadShaders();
@@ -9,6 +12,7 @@ LightingStage::LightingStage()
 	CreateQuadVertexArrayObject();
 	SetupBRDFFramebuffer();
 	SetupSSAOFramebuffer();
+	SetupSkyBox();
 }
 
 void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
@@ -101,6 +105,19 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	
+	//Skybox
+	// bind the source framebuffer and select a color attachment to copy from
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, geometryStage.GetGBufferID());
+	glReadBuffer(GL_DEPTH_ATTACHMENT);
+
+	// bind the destination framebuffer and select the color attachments to copy to
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glDrawBuffer(GL_DEPTH_ATTACHMENT);
+
+	// copy
+	glBlitFramebuffer(0, 0, mWidth, mHeight, 0, 0, mWidth, mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+
 	glBindVertexArray(0);
 }
 
@@ -114,6 +131,8 @@ void LightingStage::LoadShaders()
 		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
 	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
+	//skyboxShader = Shader(FileSystem::getPath("Shaders/skybox.vert.glsl").c_str(),
+		//FileSystem::getPath("Shaders/skybox.frag.glsl").c_str());
 }
 
 void LightingStage::GenerateRandomSamplePoints()
@@ -170,4 +189,9 @@ void LightingStage::SetupSSAOFramebuffer()
 	ssaoTexture.CreateTexture(mWidth, mHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoTexture.GetTextureID(), 0);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+}
+
+void LightingStage::SetupSkyBox()
+{
+	skybox.Init(SKYBOX_PATH, SKYBOX_FILE_EXTENSION);
 }
