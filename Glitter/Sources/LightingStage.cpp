@@ -2,8 +2,6 @@
 #include "LightingStage.hpp"
 #include "filesystem.hpp"
 
-#define CUBE_FACES 6
-
 LightingStage::LightingStage()
 {
 	LoadShaders();
@@ -15,35 +13,15 @@ LightingStage::LightingStage()
 
 void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
 {
-	glEnable(GL_DEPTH_TEST);
 	glm::mat4 lightProjection = glm::perspective(glm::radians(90.0f), 1.0f, mNear, mFar);
 
 	//Create a shadow map for every light
 	for (int i = 0; i < TOTAL_LIGHTS; i++)
 	{
-		for (int cubeFace = 0; cubeFace < CUBE_FACES; cubeFace++)
-		{
-			glm::mat4 lightView = glm::lookAt(lights[i].Position(),
-				lights[i].Position() + CubeOrientations[cubeFace],
-				CubeUpDirections[cubeFace]);
-			glm::mat4 lightSpace = lightProjection * lightView;
-			lights[i].shadowMap.cubeMap.CreateFace(cubeFace);
-			GLuint buffID = lights[i].shadowMap.cubeMap.GetFrameBufferID();
-			glBindFramebuffer(GL_FRAMEBUFFER, buffID);
-
-			shadowMapShader.Use();
-			glUniformMatrix4fv(glGetUniformLocation(shadowMapShader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpace));
-			glUniformMatrix4fv(glGetUniformLocation(shadowMapShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-			glUniform1f(glGetUniformLocation(shadowMapShader.Program, "farPlane"), mFar);
-			glUniform3fv(glGetUniformLocation(shadowMapShader.Program, "lightPosition"), 1, glm::value_ptr(lights[i].Position()));
-
-			glClear(GL_DEPTH_BUFFER_BIT);
-			model.Draw(shadowMapShader);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
+		lights[i].CreateShadowMap(shadowMapShader, model, modelMatrix);
 	}
 
+	//Set viewport back when done because the cube map changes it
 	glViewport(0, 0, mWidth, mHeight);
 
 	//Use the shadow map results with the brdf to get lighting with shadows
@@ -80,15 +58,15 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glUniform1f(glGetUniformLocation(brdfShader.Program, "farPlane"), mFar);
 
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, lights[0].shadowMap.cubeMap.GetTextureID());
+	glBindTexture(GL_TEXTURE_CUBE_MAP, lights[0].GetShadowMapTextureID());
 	glUniform1i(glGetUniformLocation(brdfShader.Program, "shadowMap[0]"), 3);
 
 	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, lights[1].shadowMap.cubeMap.GetTextureID());
+	glBindTexture(GL_TEXTURE_CUBE_MAP, lights[1].GetShadowMapTextureID());
 	glUniform1i(glGetUniformLocation(brdfShader.Program, "shadowMap[1]"), 4);
 
 	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, lights[2].shadowMap.cubeMap.GetTextureID());
+	glBindTexture(GL_TEXTURE_CUBE_MAP, lights[2].GetShadowMapTextureID());
 	glUniform1i(glGetUniformLocation(brdfShader.Program, "shadowMap[2]"), 5);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -124,7 +102,6 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	
 	glBindVertexArray(0);
-	glDisable(GL_DEPTH_TEST);
 }
 
 void LightingStage::LoadShaders()
