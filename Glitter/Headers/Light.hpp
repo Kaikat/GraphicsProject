@@ -2,6 +2,9 @@
 #pragma once 
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <string>
+
 #include "ShadowMap.hpp"
 
 class Light
@@ -23,4 +26,6 @@ class Light
 		void Init();
 
 		void CreateShadowMap(Shader shadowMapShader, Model model, glm::mat4 modelMatrix);
+
+		void LoadDataToShader(GLuint shaderID, string lightPosition, string lightColor, string lightIntensity);
 };

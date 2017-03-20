@@ -6,6 +6,8 @@
 
 #define TOTAL_LIGHTS 3
 
+enum class BRDF_TYPE { Blinn_Phong, Cook_Torrance };
+
 const glm::vec3 QuadPositions[4] = { 
 	glm::vec3(-1.0f, -1.0f, 0.0f),
 	glm::vec3(-1.0f, 1.0f, 0.0f),

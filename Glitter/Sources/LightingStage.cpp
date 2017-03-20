@@ -5,8 +5,10 @@
 const string SKYBOX_PATH = "Resources/MountainSkybox/";
 const string SKYBOX_FILE_EXTENSION = ".jpg";
 
-LightingStage::LightingStage()
+LightingStage::LightingStage(BRDF_TYPE brdf)
 {
+	BRDF = brdf;
+
 	LoadShaders();
 	GenerateRandomSamplePoints();
 	CreateQuadVertexArrayObject();
@@ -36,6 +38,7 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glUniformMatrix4fv(glGetUniformLocation(brdfShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
 	glBindVertexArray(vertexArrayBufferID);
+	
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, geometryStage.GetPositionTextureID()); 
 	glUniform1i(glGetUniformLocation(brdfShader.Program, "gPosition"), 0);
@@ -48,15 +51,8 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glBindTexture(GL_TEXTURE_2D, geometryStage.GetNormalTextureID());
 	glUniform1i(glGetUniformLocation(brdfShader.Program, "gNormal"), 2);
 
-	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[0].Position"), 1, glm::value_ptr(lights[0].Position()));
-	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[1].Position"), 1, glm::value_ptr(lights[1].Position()));
-	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[2].Position"), 1, glm::value_ptr(lights[2].Position()));
-	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[0].Color"), 1, glm::value_ptr(lights[0].Color()));
-	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[1].Color"), 1, glm::value_ptr(lights[1].Color()));
-	glUniform3fv(glGetUniformLocation(brdfShader.Program, "lights[2].Color"), 1, glm::value_ptr(lights[2].Color()));
-	glUniform1f(glGetUniformLocation(brdfShader.Program, "lights[0].Intensity"), lights[0].Intensity());
-	glUniform1f(glGetUniformLocation(brdfShader.Program, "lights[1].Intensity"), lights[1].Intensity());
-	glUniform1f(glGetUniformLocation(brdfShader.Program, "lights[2].Intensity"), lights[2].Intensity());
+	LoadLightUniforms(lights, brdfShader.Program);
+
 
 	// Shadow Map Stuff
 	glUniform1f(glGetUniformLocation(brdfShader.Program, "farPlane"), mFar);
@@ -131,14 +127,26 @@ void LightingStage::LoadShaders()
 {
 	shadowMapShader = Shader(FileSystem::getPath("Shaders/shadow_map.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/shadow_map.frag.glsl").c_str());
-	brdfShader = Shader(FileSystem::getPath("Shaders/blinn_phong.vert.glsl").c_str(),
-		FileSystem::getPath("Shaders/blinn_phong.frag.glsl").c_str());
+
+	string brdfType = BRDF == BRDF_TYPE::Blinn_Phong ? "Shaders/blinn_phong" : "Shaders/cook_torrance";
+	brdfShader = Shader(FileSystem::getPath(brdfType + ".vert.glsl").c_str(),
+		FileSystem::getPath(brdfType + ".frag.glsl").c_str());
+
 	ssaoShader = Shader(FileSystem::getPath("Shaders/ssao.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
 	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/combineLightingResults.frag.glsl").c_str());
 	skyboxShader = Shader(FileSystem::getPath("Shaders/skybox.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/skybox.frag.glsl").c_str());
+}
+
+void LightingStage::LoadLightUniforms(Light *lights, GLuint shaderID)
+{
+	for (int i = 0; i < TOTAL_LIGHTS; i++)
+	{
+		string str_i = std::to_string(i);
+		lights[i].LoadDataToShader(brdfShader.Program, "lights[" + str_i + "].Position", "lights[" + str_i + "].Color", "lights[" + str_i + "].Intensity");
+	}
 }
 
 void LightingStage::GenerateRandomSamplePoints()

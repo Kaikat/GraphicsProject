@@ -25,6 +25,8 @@ class LightingStage
 		Shader lightingResultsShader;
 		Shader skyboxShader;
 
+		BRDF_TYPE BRDF;
+
 		//The quad that will be drawn to for deferred rendering
 		GLuint vertexArrayBufferID;
 
@@ -43,7 +45,7 @@ class LightingStage
 		SkyBox skybox;
 
 	public:
-		LightingStage();
+		LightingStage(BRDF_TYPE brdf);
 		void Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
 
 	private:
@@ -53,4 +55,7 @@ class LightingStage
 		void SetupBRDFFramebuffer();
 		void SetupSSAOFramebuffer();
 		void SetupSkyBox();
+
+		//Helper Functions
+		void LoadLightUniforms(Light *lights, GLuint shaderID);
 };

@@ -18,7 +18,7 @@ void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float w
 
 	//Initialize Stages
 	geometryStage = unique_ptr<GeometryStage>(new GeometryStage());
-	lightingStage = unique_ptr<LightingStage>(new LightingStage());
+	lightingStage = unique_ptr<LightingStage>(new LightingStage(BRDF_TYPE::Blinn_Phong));
 }
 
 void Renderer::SetCamera(glm::vec3 cameraPosition)
