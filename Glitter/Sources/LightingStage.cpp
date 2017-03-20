@@ -140,6 +140,7 @@ void LightingStage::LoadShaders()
 		FileSystem::getPath("Shaders/skybox.frag.glsl").c_str());
 }
 
+
 void LightingStage::LoadLightUniforms(Light *lights, GLuint shaderID)
 {
 	for (int i = 0; i < TOTAL_LIGHTS; i++)

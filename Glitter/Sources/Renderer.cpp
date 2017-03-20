@@ -5,9 +5,9 @@
 
 Renderer::Renderer()
 {
-	lights[0] = Light(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0);
-	lights[1] = Light(glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0);
-	lights[2] = Light(glm::vec3(0.0f, 30.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0);
+	lights[0] = Light(glm::vec3(40.0f, 10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 30.0);
+	lights[1] = Light(glm::vec3(-40.0f, 20.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 50.0);
+	lights[2] = Light(glm::vec3(0.0f, 30.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 60.0);
 }
 
 void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float worldModelScale)
@@ -18,7 +18,7 @@ void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float w
 
 	//Initialize Stages
 	geometryStage = unique_ptr<GeometryStage>(new GeometryStage());
-	lightingStage = unique_ptr<LightingStage>(new LightingStage(BRDF_TYPE::Blinn_Phong));
+	lightingStage = unique_ptr<LightingStage>(new LightingStage(BRDF_TYPE::Cook_Torrance));
 }
 
 void Renderer::SetCamera(glm::vec3 cameraPosition)
