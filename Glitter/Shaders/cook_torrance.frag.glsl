@@ -63,7 +63,8 @@ float DistributionFunction(float angleBetweenNormal_Half, float alpha)
 {
     float alpha2 = alpha * alpha;
     float angleBetweenNH2 = angleBetweenNormal_Half * angleBetweenNormal_Half;
-    float denominator = angleBetweenNH2 * alpha2 + (1.0 - angleBetweenNH2);
+    //float denominator = angleBetweenNH2 * alpha2 + (1.0 - angleBetweenNH2);
+    float denominator = angleBetweenNH2 * (alpha2 - 1.0) + 1.0;
     return (angleBetweenNH2 > 0 ? 1.0 : 0.0) * alpha2 / (PI * denominator * denominator);
 }
 
@@ -125,11 +126,11 @@ void main()
 
         float torranceNumerator = D * G;
         vec3 FragPosWorld = (inverse(view) * vec4(FragPos, 1.0)).xyz;
-        float lightFallOff = lights[i].Intensity / length(lights[i].Position - FragPosWorld);
-        cook += (Kd_fresnel * Flambert + Ks_fresnel * (D * G / torranceDenominator)) * isShadow(i) * lightFallOff;
+        float lightFallOff = lights[i].Intensity / pow(length(lights[i].Position - FragPosWorld), 2.0);
+        cook += (Kd_fresnel * Flambert + Ks_fresnel * (D * G / torranceDenominator)) * isShadow(i) * lightFallOff * lights[i].Color;
     }
 
-    vec4 ambient = vec4(Albedo * 0.4, 1.0);
+    vec4 ambient = vec4(Albedo * 0.1, 1.0);
     FragColor = vec4(cook, 1.0) + ambient;
 }
 /*

@@ -21,6 +21,7 @@ class LightingStage
 	private:
 		Shader shadowMapShader;
 		Shader brdfShader;
+		Shader hdrShader;
 		Shader ssaoShader; //screen space ambient occlusion
 		Shader lightingResultsShader;
 		Shader skyboxShader;
@@ -30,9 +31,13 @@ class LightingStage
 		//The quad that will be drawn to for deferred rendering
 		GLuint vertexArrayBufferID;
 
-		//The buffer and texture that will hold the result of deferred rendering with a brdf
+		//The buffer and texture that will hold the result of deferred rendering with a brdf (hdr)
 		GLuint brdfResultFrameBufferID;
 		Texture2D brdfTexture;
+
+		//The buffer and texture that will hold the ldr image
+		GLuint hdrResultFrameBufferID;
+		Texture2D ldrTexture;
 
 		//The buffer and texture that will hold the result of screen space ambient occlusion (ssao)
 		GLuint ssaoResultFrameBufferID;
@@ -53,6 +58,7 @@ class LightingStage
 		void GenerateRandomSamplePoints();
 		void CreateQuadVertexArrayObject();
 		void SetupBRDFFramebuffer();
+		void SetupHDRFramebuffer();
 		void SetupSSAOFramebuffer();
 		void SetupSkyBox();
 

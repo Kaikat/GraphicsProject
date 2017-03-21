@@ -13,6 +13,7 @@ LightingStage::LightingStage(BRDF_TYPE brdf)
 	GenerateRandomSamplePoints();
 	CreateQuadVertexArrayObject();
 	SetupBRDFFramebuffer();
+	SetupHDRFramebuffer();
 	SetupSSAOFramebuffer();
 	SetupSkyBox();
 }
@@ -33,7 +34,7 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	//Use the shadow map results with the brdf to get lighting with shadows
 	glBindFramebuffer(GL_FRAMEBUFFER, brdfResultFrameBufferID); //put the results in this framebuffer rather than on the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
 	brdfShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(brdfShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
@@ -71,6 +72,15 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+	// HDR
+	hdrShader.Use();
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrResultFrameBufferID);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, brdfTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(hdrShader.Program, "hdrTexture"), 0);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 	// Use the results of the brdf with ssao
 	ssaoShader.Use();
 	glBindFramebuffer(GL_FRAMEBUFFER, ssaoResultFrameBufferID);
@@ -92,7 +102,8 @@ void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, brdfTexture.GetTextureID());
+	glBindTexture(GL_TEXTURE_2D, ldrTexture.GetTextureID());
+	//glBindTexture(GL_TEXTURE_2D, brdfTexture.GetTextureID());
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, ssaoTexture.GetTextureID());
 
@@ -132,6 +143,8 @@ void LightingStage::LoadShaders()
 	brdfShader = Shader(FileSystem::getPath(brdfType + ".vert.glsl").c_str(),
 		FileSystem::getPath(brdfType + ".frag.glsl").c_str());
 
+	hdrShader = Shader(FileSystem::getPath("Shaders/hdr.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/hdr.frag.glsl").c_str());
 	ssaoShader = Shader(FileSystem::getPath("Shaders/ssao.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/ssao.frag.glsl").c_str());
 	lightingResultsShader = Shader(FileSystem::getPath("Shaders/combineLightingResults.vert.glsl").c_str(),
@@ -191,8 +204,19 @@ void LightingStage::SetupBRDFFramebuffer()
 	//put the brdf's results in this framebuffer's color attachment rather than on the screen
 	glGenFramebuffers(1, &brdfResultFrameBufferID);
 	glBindFramebuffer(GL_FRAMEBUFFER, brdfResultFrameBufferID); 
-	brdfTexture.CreateTexture(mWidth, mHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//brdfTexture.CreateTexture(mWidth, mHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	brdfTexture.CreateTexture(mWidth, mHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfTexture.GetTextureID(), 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+}
+
+void LightingStage::SetupHDRFramebuffer()
+{
+	//put the hdr results in this framebuffer's color attachment rather than on screen
+	glGenFramebuffers(1, &hdrResultFrameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrResultFrameBufferID);
+	ldrTexture.CreateTexture(mWidth, mHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ldrTexture.GetTextureID(), 0);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
