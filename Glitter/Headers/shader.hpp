@@ -66,12 +66,12 @@ public:
 		vertex = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(vertex, 1, &vShaderCode, NULL);
 		glCompileShader(vertex);
-		checkCompileErrors(vertex, "VERTEX");
+		checkCompileErrors(vertex, "VERTEX", vertexPath);
 		// Fragment Shader
 		fragment = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fragment, 1, &fShaderCode, NULL);
 		glCompileShader(fragment);
-		checkCompileErrors(fragment, "FRAGMENT");
+		checkCompileErrors(fragment, "FRAGMENT", fragmentPath);
 		// If geometry shader is given, compile geometry shader
 		GLuint geometry;
 		if (geometryPath != nullptr)
@@ -80,7 +80,7 @@ public:
 			geometry = glCreateShader(GL_GEOMETRY_SHADER);
 			glShaderSource(geometry, 1, &gShaderCode, NULL);
 			glCompileShader(geometry);
-			checkCompileErrors(geometry, "GEOMETRY");
+			checkCompileErrors(geometry, "GEOMETRY", geometryPath);
 		}
 		// Shader Program
 		this->Program = glCreateProgram();
@@ -89,7 +89,7 @@ public:
 		if (geometryPath != nullptr)
 			glAttachShader(this->Program, geometry);
 		glLinkProgram(this->Program);
-		checkCompileErrors(this->Program, "PROGRAM");
+		checkCompileErrors(this->Program, "PROGRAM", fragmentPath);
 		// Delete the shaders as they're linked into our program now and no longer necessery
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
@@ -101,7 +101,7 @@ public:
 	void Use() { glUseProgram(this->Program); }
 
 private:
-	void checkCompileErrors(GLuint shader, std::string type)
+	void checkCompileErrors(GLuint shader, std::string type, std::string filePath)
 	{
 		GLint success;
 		GLchar infoLog[1024];
@@ -112,6 +112,7 @@ private:
 			{
 				glGetShaderInfoLog(shader, 1024, NULL, infoLog);
 				std::cout << "| ERROR::::SHADER-COMPILATION-ERROR of type: " << type << "|\n" << infoLog << "\n| -- --------------------------------------------------- -- |" << std::endl;
+				std::cout << "FILE_PATH: " << filePath << std::endl;
 			}
 		}
 		else
@@ -121,6 +122,7 @@ private:
 			{
 				glGetProgramInfoLog(shader, 1024, NULL, infoLog);
 				std::cout << "| ERROR::::PROGRAM-LINKING-ERROR of type: " << type << "|\n" << infoLog << "\n| -- --------------------------------------------------- -- |" << std::endl;
+				std::cout << "FILE_PATH: " << filePath << std::endl;
 			}
 		}
 	}
