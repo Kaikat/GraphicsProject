@@ -19,11 +19,12 @@ void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float w
 	//Initialize Stages
 	geometryStage = unique_ptr<GeometryStage>(new GeometryStage());
 	lightingStage = unique_ptr<LightingStage>(new LightingStage(BRDF_TYPE::Cook_Torrance));
+	forwardStage = unique_ptr<ForwardStage>(new ForwardStage());
 }
 
 void Renderer::AddModel(string modelFilename, float scale)
 {
-
+	sceneObjects.push_back(Object(Model(modelFilename), 2.0, glm::vec3(10.0f, 0.0f, 10.0f)));
 }
 
 void Renderer::SetCamera(glm::vec3 cameraPosition)
@@ -56,7 +57,7 @@ void Renderer::Render()
 
 	geometryStage->Pass(worldObject, view, projection);
 	lightingStage->Pass(lights, worldObject, view, projection, *geometryStage);
-
+	forwardStage->Pass(lights, sceneObjects, view, projection, *geometryStage);
 }
 
 void Renderer::Update(float deltaTime)

@@ -32,7 +32,7 @@ int main(int argc, char * argv[]) {
 
 	GLFWwindow *mWindow = SetUpGLFW();
 	renderer.Init(glm::vec3(0.f, 0.f, 2.f), FileSystem::getPath(MODEL).c_str(), 0.05f);
-	//renderer.AddModel(FileSystem::getPath(DRAGON_MODEL).c_str(), 1.0f);
+	renderer.AddModel(FileSystem::getPath(DRAGON_MODEL).c_str(), 1.0f);
 
     // Rendering Loop
 	double oldTime = glfwGetTime();

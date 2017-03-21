@@ -13,6 +13,7 @@
 
 #include "GeometryStage.hpp"
 #include "LightingStage.hpp"
+#include "ForwardStage.hpp"
 #include "Object.hpp"
 
 class Renderer
@@ -24,12 +25,14 @@ class Renderer
 		glm::mat4 view;
 		glm::mat4 projection;
 
+		vector<Object> sceneObjects;
 		Light lights[3];
 		std::unique_ptr<Shader> sampleShader;
 
 		////////////// Passes | Stages //////////////
 		std::unique_ptr<GeometryStage> geometryStage;
 		std::unique_ptr<LightingStage> lightingStage;
+		std::unique_ptr<ForwardStage> forwardStage;
 
 		////////////// Input //////////////
 		map<int, bool> keyPressed;
