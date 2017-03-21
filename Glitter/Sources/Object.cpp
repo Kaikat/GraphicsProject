@@ -4,9 +4,11 @@
 Object::Object(Model objectModel, float scale, glm::vec3 translation)
 {
 	model = objectModel;
+	Position = translation;
+
 	modelMatrix = glm::mat4();
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(scale)); 
-	modelMatrix = glm::translate(modelMatrix, glm::vec3(-1, 0, 0));
+	modelMatrix = glm::translate(modelMatrix, translation);
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
 }
 
 void Object::Draw(Shader shader)

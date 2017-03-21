@@ -27,13 +27,31 @@ ForwardStage::ForwardStage()
 	frontFaceNormalTexture.CreateTexture(mWidth, mHeight, GL_RGB16F, GL_RGB, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, frontFaceNormalTexture.GetTextureID(), 0);
 
-	GLuint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(2, attachments);
+	GLuint frontAttachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, frontAttachments);
 
 	frontPositionTexture.PrintID("Yellow: FrontPositionTexture");
 	frontFaceNormalTexture.PrintID("Red: FrontFaceNormalTexture");
 
 	//Back of object
+	glGenFramebuffers(1, &transparentObjectBackFrameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, transparentObjectBackFrameBufferID);
+
+	backDepthTexture.CreateTexture(mWidth, mHeight, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, backDepthTexture.GetTextureID(), 0);
+	glDrawBuffer(GL_DEPTH_ATTACHMENT);
+
+	backPositionRefractedTexture.CreateTexture(mWidth, mHeight, GL_RGB16F, GL_RGB, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, backPositionRefractedTexture.GetTextureID(), 0);
+
+	backFaceNormalTexture.CreateTexture(mWidth, mHeight, GL_RGB16F, GL_RGB, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, backFaceNormalTexture.GetTextureID(), 0);
+
+	GLuint backAttachments[2] = { GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(2, backAttachments);
+
+	backPositionRefractedTexture.PrintID("Yellow: backPositionTexture");
+	backFaceNormalTexture.PrintID("Red: backFaceNormalTexture");
 	/*glGenFramebuffers(1, &transparentObjectBackFrameBufferID);
 	glBindFramebuffer(GL_FRAMEBUFFER, transparentObjectBackFrameBufferID);
 	backDepthTexture.CreateTexture(mWidth, mHeight, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -52,6 +70,9 @@ ForwardStage::ForwardStage()
 
 void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
 {
+	glm::mat4 view;
+	view = glm::lookAt(lights[0].Position(), objects[0].Position, glm::vec3(0.0, 1.0, 0.0));
+
 	glBindFramebuffer(GL_FRAMEBUFFER, sceneDepthFrameBufferID);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -62,14 +83,32 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
+	//Front facing
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, transparentObjectFrontFrameBufferID);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	transparentObjectShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
-	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	objects[0].Draw(transparentObjectShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//Back facing
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, transparentObjectBackFrameBufferID);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	transparentObjectShader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	objects[0].Draw(transparentObjectShader);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glDisable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 	glDisable(GL_DEPTH_TEST);
 }

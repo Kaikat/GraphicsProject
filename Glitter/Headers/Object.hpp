@@ -14,6 +14,9 @@ class Object
 		glm::mat4 modelMatrix;
 
 	public:
+		glm::vec3 Position;
+
+	public:
 		Object() {};
 		Object(Model objectModel, float scale, glm::vec3 translation);
 		glm::mat4 GetModelMatrix() { return modelMatrix; };

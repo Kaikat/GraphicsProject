@@ -24,7 +24,7 @@ void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float w
 
 void Renderer::AddModel(string modelFilename, float scale)
 {
-	sceneObjects.push_back(Object(Model(modelFilename), 2.0, glm::vec3(10.0f, 0.0f, 10.0f)));
+	sceneObjects.push_back(Object(Model(modelFilename), 15.0, glm::vec3(10.0f, 0.0f, 10.0f)));
 }
 
 void Renderer::SetCamera(glm::vec3 cameraPosition)
