@@ -5,6 +5,7 @@
 #include "model.hpp"
 #include "GeometryStage.hpp"
 #include "Constants.hpp"
+#include "Object.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -51,7 +52,8 @@ class LightingStage
 
 	public:
 		LightingStage(BRDF_TYPE brdf);
-		void Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
+		void Pass(Light *lights, Object object, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
+
 
 	private:
 		void LoadShaders();

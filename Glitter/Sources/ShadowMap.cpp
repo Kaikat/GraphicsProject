@@ -15,7 +15,7 @@ void ShadowMap::Init()
 	cubeMap.Init(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 }
 
-void ShadowMap::CreateShadowMap(Shader shadowMapShader, Model model, glm::vec3 lightPosition, glm::mat4 modelMatrix)
+void ShadowMap::CreateShadowMap(Shader shadowMapShader, Object object, glm::vec3 lightPosition)
 {
 	glEnable(GL_DEPTH_TEST);
 	glm::mat4 lightProjectionMatrix = glm::perspective(glm::radians(90.0f), 1.0f, mNear, mFar);
@@ -32,12 +32,12 @@ void ShadowMap::CreateShadowMap(Shader shadowMapShader, Model model, glm::vec3 l
 		shadowMapShader.Use();
 		glBindFramebuffer(GL_FRAMEBUFFER, cubeMap.GetFrameBufferID());
 		glUniformMatrix4fv(glGetUniformLocation(shadowMapShader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpace));
-		glUniformMatrix4fv(glGetUniformLocation(shadowMapShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(glGetUniformLocation(shadowMapShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(object.GetModelMatrix()));
 		glUniform1f(glGetUniformLocation(shadowMapShader.Program, "farPlane"), mFar);
 		glUniform3fv(glGetUniformLocation(shadowMapShader.Program, "lightPosition"), 1, glm::value_ptr(lightPosition));
 
 		glClear(GL_DEPTH_BUFFER_BIT);
-		model.Draw(shadowMapShader);
+		object.Draw(shadowMapShader);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

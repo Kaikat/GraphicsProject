@@ -18,14 +18,14 @@ LightingStage::LightingStage(BRDF_TYPE brdf)
 	SetupSkyBox();
 }
 
-void LightingStage::Pass(Light *lights, Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
+void LightingStage::Pass(Light *lights, Object object, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
 {
 	glm::mat4 lightProjection = glm::perspective(glm::radians(90.0f), 1.0f, mNear, mFar);
 
 	//Create a shadow map for every light
 	for (int i = 0; i < TOTAL_LIGHTS; i++)
 	{
-		lights[i].CreateShadowMap(shadowMapShader, model, modelMatrix);
+		lights[i].CreateShadowMap(shadowMapShader, object);
 	}
 
 	//Set viewport back when done because the cube map changes it

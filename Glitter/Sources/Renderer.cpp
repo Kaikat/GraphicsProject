@@ -21,6 +21,11 @@ void Renderer::Init(glm::vec3 cameraPosition, string worldModelFilename, float w
 	lightingStage = unique_ptr<LightingStage>(new LightingStage(BRDF_TYPE::Cook_Torrance));
 }
 
+void Renderer::AddModel(string modelFilename, float scale)
+{
+
+}
+
 void Renderer::SetCamera(glm::vec3 cameraPosition)
 {
 	camera = unique_ptr<Camera>(new Camera(cameraPosition));
@@ -31,10 +36,7 @@ void Renderer::SetCamera(glm::vec3 cameraPosition)
 void Renderer::SetWorldModel(string filename, float scale)
 {
 	// The world doesn't move or change so this only has to be set once
-	worldModel = unique_ptr<Model>(new Model(filename));
-	model = glm::mat4();
-	model = glm::scale(model, glm::vec3(scale));    // The sponza model is too big, scale it first
-	model = glm::translate(model, glm::vec3(-1, 0, 0));
+	worldObject = Object(Model(filename), scale, glm::vec3(-1.0f, 0.0f, 0.0f));
 }
 
 void Renderer::InitLights()
@@ -52,8 +54,9 @@ void Renderer::Render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, mWidth, mHeight);
 
-	geometryStage->Pass(*worldModel, model, view, projection);
-	lightingStage->Pass(lights, *worldModel, model, view, projection, *geometryStage);
+	geometryStage->Pass(worldObject, view, projection);
+	lightingStage->Pass(lights, worldObject, view, projection, *geometryStage);
+
 }
 
 void Renderer::Update(float deltaTime)

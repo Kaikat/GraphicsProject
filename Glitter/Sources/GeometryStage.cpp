@@ -65,14 +65,14 @@ void GeometryStage::AssignUniforms(glm::mat4 modelMatrix, glm::mat4 viewMatrix, 
 	glUniformMatrix4fv(glGetUniformLocation(gBufferShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 }
 
-void GeometryStage::Pass(Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+void GeometryStage::Pass(Object object, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBufferID);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gBufferShader.Use();
-	AssignUniforms(modelMatrix, viewMatrix, projectionMatrix);
-	model.Draw(gBufferShader);
+	AssignUniforms(object.GetModelMatrix(), viewMatrix, projectionMatrix);
+	object.Draw(gBufferShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST);
 }

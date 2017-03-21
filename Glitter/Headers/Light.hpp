@@ -6,6 +6,7 @@
 #include <string>
 
 #include "ShadowMap.hpp"
+#include "Object.hpp"
 
 class Light
 {
@@ -25,7 +26,6 @@ class Light
 		GLuint GetShadowMapFrameBufferID() { return shadowMap.GetFrameBufferID(); };
 		void Init();
 
-		void CreateShadowMap(Shader shadowMapShader, Model model, glm::mat4 modelMatrix);
-
+		void CreateShadowMap(Shader shadowMapShader, Object object);
 		void LoadDataToShader(GLuint shaderID, string lightPosition, string lightColor, string lightIntensity);
 };

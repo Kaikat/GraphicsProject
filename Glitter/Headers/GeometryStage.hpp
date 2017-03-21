@@ -6,6 +6,7 @@
 #include <memory>
 #include "shader.hpp"
 #include "model.hpp"
+#include "Object.hpp"
 
 class GeometryStage
 {
@@ -19,7 +20,7 @@ class GeometryStage
 
 	public:
 		GeometryStage();
-		void Pass(Model model, glm::mat4 modelMatrix, glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+		void Pass(Object object, glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
 		GLuint GetGBufferID() { return gBufferID; };
 		GLuint GetPositionTextureID() { return positionTextureID; };
 		GLuint GetColorTextureID() { return colorTextureID; };

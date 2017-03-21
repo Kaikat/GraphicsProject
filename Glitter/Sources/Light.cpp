@@ -14,9 +14,9 @@ void Light::Init()
 	shadowMap.Init();
 }
 
-void Light::CreateShadowMap(Shader shadowMapShader, Model model, glm::mat4 modelMatrix)
+void Light::CreateShadowMap(Shader shadowMapShader, Object object)
 {
-	shadowMap.CreateShadowMap(shadowMapShader, model, position, modelMatrix);
+	shadowMap.CreateShadowMap(shadowMapShader, object, position);
 }
 
 void Light::LoadDataToShader(GLuint shaderID, string lightPosition, string lightColor, string lightIntensity)

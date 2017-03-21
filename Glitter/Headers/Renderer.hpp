@@ -13,14 +13,14 @@
 
 #include "GeometryStage.hpp"
 #include "LightingStage.hpp"
+#include "Object.hpp"
 
 class Renderer
 {
 	private:
 		std::unique_ptr<Camera> camera;
-		std::unique_ptr<Model> worldModel;
 
-		glm::mat4 model;
+		Object worldObject;
 		glm::mat4 view;
 		glm::mat4 projection;
 
@@ -45,6 +45,7 @@ class Renderer
 	public:
 		Renderer();
 		void Init(glm::vec3 cameraPosition, string worldModelFilename, float worldModelScale = 1.0f);
+		void AddModel(string modelFilename, float scale = 1.0f);
 		void Update(float deltaTime);
 		void Render();
 
