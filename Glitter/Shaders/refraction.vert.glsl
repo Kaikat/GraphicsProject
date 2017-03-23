@@ -19,5 +19,5 @@ void main()
     TexCoords = (clipSpace / clipSpace.w).xy;
 
     //mat3 normalMatrix = transpose(inverse(mat3(view * model)));
-    //Normal = normalMatrix * normal;
+   // Normal = normalMatrix * normal;
 }

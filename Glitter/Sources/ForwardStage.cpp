@@ -2,6 +2,10 @@
 #include "ForwardStage.hpp"
 #include "filesystem.hpp"
 #include "glitter.hpp"
+#include <glm/gtc/type_ptr.hpp>
+
+
+#define STEP 1.0/50.0
 
 ForwardStage::ForwardStage()
 {
@@ -69,10 +73,41 @@ ForwardStage::ForwardStage()
 	refractionP1Texture.PrintID("RefractionP1Texture");
 	refractionP2Texture.PrintID("RefractionP2Texture");
 
+	//Refraction Debugger
+	glGenFramebuffers(1, &debuggingFrameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, debuggingFrameBufferID);
+	glGenVertexArrays(1, &debuggerVAO);
+	glBindVertexArray(debuggerVAO);
+
+	//debuggingTexture.CreateTexture(mWidth, mHeight, GL_RGB16F, GL_RGB, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, debuggingTexture.GetTextureID(), 0);
+	//glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	//debuggingTexture.PrintID("DebuggingTextureID");
+
+	vector<float> NDC_pointPattern;
+	for (float i = 0.0; i < 1.0; i += STEP)
+	{
+		for (float k = 0.0; k < 1.0; k += STEP)
+		{
+			NDC_pointPattern.push_back(i);
+			NDC_pointPattern.push_back(k);
+		}
+	}
+
+	glGenBuffers(1, &NDC_pointPatternBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, NDC_pointPatternBufferID);
+	glBufferData(GL_ARRAY_BUFFER, NDC_pointPattern.size() * sizeof(float), &NDC_pointPattern[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0); //vertex shader
+
 	transparentObjectShader = Shader(FileSystem::getPath("Shaders/transparentObject.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/transparentObject.frag.glsl").c_str());
 	refractionShader = Shader(FileSystem::getPath("Shaders/refraction.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/refraction.frag.glsl").c_str());
+
+	debuggingShader = Shader(FileSystem::getPath("Shaders/ray_debugger.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/ray_debugger.frag.glsl").c_str(), FileSystem::getPath("Shaders/ray_debugger.geom.glsl").c_str());
 }
 
 void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
@@ -157,6 +192,40 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 	glUniform1i(glGetUniformLocation(refractionShader.Program, "back_normal"), 3);
 	objects[0].Draw(refractionShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	//Debugging Shader - Draw to screen for now
+	//glBindFramebuffer(GL_FRAMEBUFFER, debuggingFrameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	debuggingShader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "lightView"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "cameraView"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, frontPositionTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(debuggingShader.Program, "p0_point"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, refractionP1Texture.GetTextureID());
+	glUniform1i(glGetUniformLocation(debuggingShader.Program, "p1_point"), 1);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, refractionP2Texture.GetTextureID());
+	glUniform1i(glGetUniformLocation(debuggingShader.Program, "p2_point"), 2);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, frontFaceNormalTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(debuggingShader.Program, "p0_normal"), 3);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, backFaceNormalTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(debuggingShader.Program, "p1_normal"), 4);
+
+	glBindVertexArray(debuggerVAO);
+	glDrawArrays(GL_POINTS, 0, 50*50);
 
 	glDisable(GL_DEPTH_TEST);
 }

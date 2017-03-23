@@ -12,6 +12,8 @@ in vec2 TexCoords;
 #define INDEX_OF_REFRACTION_AIR 1.00029
 #define INDEX_OF_REFRACTION_WATER 1.33
 
+#define PI 3.14159265358979323
+
 uniform sampler2D front_depth;
 uniform sampler2D back_depth;
 
@@ -23,22 +25,42 @@ uniform sampler2D back_normal;
 
 void main()
 {    
-    //normal = normalize(Normal);
+   // vec3 normal = normalize(Normal);
     vec3 normal = normalize(texture(front_normal, TexCoords)).xyz;
     vec3 v = -FragPos;
     float angle_i = dot(normal, v);
     vec3 dN = -normal;
 
     //calculate vector that is perpendicular to dN and in the same "2D plane"
-    vec3 R2 = cross(cross(dN, v), dN);
+    vec3 temp = cross(dN, v);
+    vec3 R2 = cross(temp, dN);
 
-    float lengthDv = texture(back_position, TexCoords).x - texture(front_position, TexCoords).x;
+    if(temp == vec3(0.0))
+    {
+         R2 = normalize(vec3(10.0,10.0, 0.0));
+    }
+
+//    R2 = normalize(vec3(10.0,10.0, 0.0));
+//    vec3 R2 = cross(cross(v, dN), dN);
+
+    if (acos(dot(R2, dN)) < 0)
+    {
+        R2 = -R2;
+    }
+
+    float lengthDv = length(texture(back_position, TexCoords) - texture(front_position, TexCoords));
     //float lengthDv = texture(back_depth, TexCoords).x - texture(front_depth, TexCoords).x;
 
     float angleT = asin(INDEX_OF_REFRACTION_AIR * sin(angle_i) / INDEX_OF_REFRACTION_WATER);
-    vec3 T1 = dN * cos(angleT) + R2 * sin(angleT);
+    
+    //angleT = 60.0 * PI / 180.0;
+    vec3 T1 = (dN * cos(angleT)) + (R2 * sin(angleT)); //or opp ---------------------------
+       //  T1 = R2 * cos(angleT) + dN * sin(angleT);
 
-    vec3 P1 = FragPos;
+    //T1 = normalize(vec3(10.0, 10.0, 0.0));
+
+    vec3 P1 = FragPos; /////////////////////////////////////
+   // P1 = texture(front_position, TexCoords).xyz;
     p1_object = P1 + (lengthDv * T1); //p2 in short paper, p1 in long paper
 
     //TODO: calculate p2_floor

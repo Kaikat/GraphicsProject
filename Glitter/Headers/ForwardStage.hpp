@@ -26,6 +26,13 @@ class ForwardStage
 		Texture2D frontFaceNormalTexture, backFaceNormalTexture;
 		Texture2D refractionP1Texture, refractionP2Texture;
 
+		//vector<float> NDC_pointPattern;
+		GLuint debuggerVAO;
+		Shader debuggingShader;
+		Texture2D debuggingTexture;
+		GLuint debuggingFrameBufferID;
+		GLuint NDC_pointPatternBufferID;
+
 	public:
 		ForwardStage();
 		void Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
