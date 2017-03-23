@@ -15,14 +15,16 @@
 class ForwardStage
 {
 	private:
-		Shader transparentObjectShader;
+		Shader transparentObjectShader, refractionShader;
 		GLuint sceneDepthFrameBufferID;
 		GLuint transparentObjectFrontFrameBufferID, transparentObjectBackFrameBufferID;
+		GLuint refractionFrameBufferID;
 
 		Texture2D sceneDepthTexture;
 		Texture2D frontDepthTexture, backDepthTexture;
 		Texture2D frontPositionTexture, backPositionRefractedTexture;
 		Texture2D frontFaceNormalTexture, backFaceNormalTexture;
+		Texture2D refractionP1Texture, refractionP2Texture;
 
 	public:
 		ForwardStage();
