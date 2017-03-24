@@ -33,6 +33,7 @@ class ForwardStage
 		GLuint debuggingFrameBufferID;
 		GLuint NDC_pointPatternBufferID;
 
+		Shader dragonWireframeShader, dragonTransparentShader;
 		Texture2D vDebugTexture, frontNormalDebugTexture;
 
 	public:

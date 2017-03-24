@@ -1,6 +1,6 @@
 #version 330 core
 layout (points) in;
-layout (line_strip, max_vertices = 4) out;
+layout (line_strip, max_vertices = 2) out;
 
 in VS_OUT
 {
@@ -37,20 +37,20 @@ void main()
     vec4 point1 = projection * cameraView * inverse(lightView) * vec4(texture(p1_point, gs_in[0].TexCoords).xyz, 1.0);
     vec4 point2 = projection * cameraView * inverse(lightView) * vec4(texture(p2_point, gs_in[0].TexCoords).xyz, 1.0);
 
-    vec4 normal0 = vec4(texture(p0_normal, gs_in[0].TexCoords).xyz, 1.0);
+    vec4 normal0 =  vec4(texture(p0_normal, gs_in[0].TexCoords).xyz, 1.0);
     vec4 normal1 = projection * model * vec4(texture(p1_normal, gs_in[0].TexCoords).xyz, 1.0);
-
+    //normal0 = vec4(normalize(normal0.xyz));
     //normals per point
-   /* fragmentColor = red;
+    fragmentColor = red;
 
     gl_Position = point0;
     EmitVertex();
 
-    gl_Position = point0 - normal0;//normalize(normal0 - point0);//normal0 + (normal0 * 0.4);
+    gl_Position = point0 + ( normal0 * 0.4);//normalize(normal0 - point0);//normal0 + (normal0 * 0.4);
     EmitVertex();
     EndPrimitive();
-*/
 
+/*
     //light to first object point
     fragmentColor = yellow;
 
@@ -59,6 +59,8 @@ void main()
 
     gl_Position = point0;
     EmitVertex();
+
+    EndPrimitive();
 
     //first object point to second object point
     fragmentColor = green;
@@ -71,7 +73,7 @@ void main()
 
     //second object point to scene object point
 
-    EndPrimitive();
+    EndPrimitive();*/
 }
 
 //C:\Users\Nataly\Downloads\apitrace-msvc-latest\x86\bin\apitrace.exe trace --api gl Glitter\Release\Glitter.exe

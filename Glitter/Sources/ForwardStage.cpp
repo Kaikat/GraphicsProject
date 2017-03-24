@@ -108,6 +108,14 @@ ForwardStage::ForwardStage()
 
 	debuggingShader = Shader(FileSystem::getPath("Shaders/ray_debugger.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/ray_debugger.frag.glsl").c_str(), FileSystem::getPath("Shaders/ray_debugger.geom.glsl").c_str());
+
+
+	dragonWireframeShader = Shader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/geometryWireframe.frag.glsl").c_str(),
+		FileSystem::getPath("Shaders/geometry.geom.glsl").c_str());
+
+	dragonTransparentShader = Shader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(),
+		FileSystem::getPath("Shaders/geometryTransparent.frag.glsl").c_str());
 }
 
 void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
@@ -124,6 +132,29 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 	glBlitFramebuffer(0, 0, mWidth, mHeight, 0, 0, mWidth, mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
+
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	dragonTransparentShader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(dragonTransparentShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(dragonTransparentShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(dragonTransparentShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glCullFace(GL_FRONT);
+	objects[0].Draw(dragonTransparentShader);
+
+	glCullFace(GL_BACK);
+	objects[0].Draw(dragonTransparentShader);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+
 
 	//Front facing
 	glEnable(GL_DEPTH_TEST);
@@ -222,6 +253,18 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 
 	glBindVertexArray(debuggerVAO);
 	glDrawArrays(GL_POINTS, 0, 50*50);
+
+
+
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	dragonWireframeShader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(dragonWireframeShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(dragonWireframeShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(dragonWireframeShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	objects[0].Draw(dragonWireframeShader);
+
 
 	glDisable(GL_DEPTH_TEST);
 }
