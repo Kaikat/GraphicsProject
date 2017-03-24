@@ -10,7 +10,7 @@ in vec2 TexCoords;
 //in vec3 Normal;
 
 #define INDEX_OF_REFRACTION_AIR 1.00029
-#define INDEX_OF_REFRACTION_WATER 1.33
+#define INDEX_OF_REFRACTION_WATER 2.0
 
 #define PI 3.14159265358979323
 
@@ -33,11 +33,11 @@ vec4 refraction(vec3 incident, vec3 normal, float ni_nt, float ni_nt_sqr )
 incident = normalize(incident);
 normal = normalize(normal);
 
-float IdotN = dot( -incident, normal );
+float IdotN = dot( incident, normal );
 float cosSqr = 1.0 - ni_nt_sqr*(1.0 - IdotN*IdotN);
 return ( cosSqr <= 0.0 ? 
 vec4( reflect( incident, normal ).xyz, -1 ) : 
-vec4( normalize( ni_nt * incident + (ni_nt * IdotN - sqrt( cosSqr )) * normal ).xyz, 1) 
+-vec4( normalize( ni_nt * incident + (ni_nt * IdotN - sqrt( cosSqr )) * normal ).xyz, 1) 
   ); 
 
   /*
@@ -108,13 +108,21 @@ void main()
    vec3 t5 = texture(back_depth, TexCoords).xyz;
 
 
-    float refractiveRatio = INDEX_OF_REFRACTION_AIR / INDEX_OF_REFRACTION_WATER;
+    //float refractiveRatio = INDEX_OF_REFRACTION_AIR / INDEX_OF_REFRACTION_WATER;
+    float refractiveRatio = INDEX_OF_REFRACTION_WATER / INDEX_OF_REFRACTION_AIR;
+
     vec3 refractionDir = refraction(-FragPos, normal, refractiveRatio, refractiveRatio * refractiveRatio).xyz;
 
-    if (acos(dot(refractionDir, dN)) < 0.0)
+    /*vec3 vv = normalize(v);
+    if (acos(dot(refractionDir, vv)) < 0.0)
     {
         refractionDir = -refractionDir;
-    }
+    }*/
+    /*float ang = acos(dot(refractionDir, -dN));
+    if (ang > 90.0 || ang < 0.0)
+    {
+        refractionDir = -refractionDir;
+    }*/
 
     const float STEP = 0.1;
     //vec3 startPoint = FragPos;
@@ -134,11 +142,13 @@ void main()
         p1_object = vec3(currentDepth);
         p2_floor = texture(front_depth,TexCoords).xyz;*/
     
-    for (float i = 0; i < 2.5 && currentDepth < calculatedBackDepth; i+= STEP)
+vec4 calcDepth;
+    //back depth is bigger than front_depth
+    for (float i = 0; i < 0.5 && currentDepth < calculatedBackDepth; i+= STEP)
     {
         startPoint = startPoint + (STEP * direction);
         //Convert this new point to depth
-        vec4 calcDepth = projection * vec4(startPoint, 1.0);
+        calcDepth = projection * vec4(startPoint, 1.0);
         calcDepth = calcDepth / calcDepth.w;
         calcDepth = (calcDepth + 1.0) / 2.0;
         currentDepth = calcDepth.z;
@@ -153,8 +163,9 @@ void main()
 //{
     //p1_object = FragPos + refractionDir;
     //p1_object = vec4(startPoint, 1.0);
-    p1_object = startPoint;
 
+    //p1_object = startPoint;
+    p1_object = texture(back_position, calcDepth.xy).xyz;
     p2_floor = p1_object;
 //}
 

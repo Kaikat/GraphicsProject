@@ -46,40 +46,51 @@ void main()
 
     vec4 normal1 = projection * model * vec4(texture(p1_normal, gs_in[0].TexCoords).xyz, 1.0);
     //normal0 = vec4(normalize(normal0.xyz));
-    //normals per point
-    fragmentColor = red;
-
-    gl_Position = point0;
-    EmitVertex();
-
-    gl_Position = point0Norm; //point0 + ( normal0 * 0.4);//normalize(normal0 - point0);//normal0 + (normal0 * 0.4);
-    EmitVertex();
-    EndPrimitive();
 
 
-    //light to first object point
-    fragmentColor = yellow;
 
-    gl_Position = projection * cameraView * inverse(lightView) * vec4(0.0, 0.0, 0.0, 1.0);
-    EmitVertex();
+   /* */
 
-    gl_Position = point0;
-    EmitVertex();
 
-    EndPrimitive();
+    if (texture(p1_point, gs_in[0].TexCoords).xyz != vec3(0.0))
+    {
+        //normals per point
+        fragmentColor = red;
 
-    //first object point to second object point
-    fragmentColor = green;
+        gl_Position = point0;
+        EmitVertex();
 
-    gl_Position = point0;
-    EmitVertex();
+        gl_Position = point0Norm; //point0 + ( normal0 * 0.4);//normalize(normal0 - point0);//normal0 + (normal0 * 0.4);
+        EmitVertex();
+        EndPrimitive();
 
-    gl_Position = point1;
-    EmitVertex();
+        //light to first object point
+        fragmentColor = yellow;
+
+        gl_Position = projection * cameraView * inverse(lightView) * vec4(0.0, 0.0, 0.0, 1.0);
+        EmitVertex();
+
+        gl_Position = point0;
+        EmitVertex();
+
+        EndPrimitive();
+
+
+        //first object point to second object point
+        fragmentColor = green;
+
+        gl_Position = point0;
+        EmitVertex();
+
+        gl_Position = point1;
+        EmitVertex();
+
+        EndPrimitive();
+    }
 
     //second object point to scene object point
 
-    EndPrimitive();
+    //EndPrimitive();
 }
 
 //C:\Users\Nataly\Downloads\apitrace-msvc-latest\x86\bin\apitrace.exe trace --api gl Glitter\Release\Glitter.exe
