@@ -16,7 +16,7 @@ void main()
     gl_Position = projection * viewPos;
     FragPos = viewPos.xyz;
     vec4 clipSpace = projection * viewPos;
-    TexCoords = (clipSpace / clipSpace.w).xy;
+    TexCoords = ((clipSpace / clipSpace.w).xy + 1.0) / 2.0;
 
     //mat3 normalMatrix = transpose(inverse(mat3(view * model)));
    // Normal = normalMatrix * normal;

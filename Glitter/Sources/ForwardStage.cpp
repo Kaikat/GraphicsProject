@@ -168,28 +168,24 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 	glBindTexture(GL_TEXTURE_2D, backDepthTexture.GetTextureID());
 	glUniform1i(glGetUniformLocation(refractionShader.Program, "back_depth"), 1);
 
-
-
-
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, frontPositionTexture.GetTextureID());
-	glUniform1i(glGetUniformLocation(refractionShader.Program, "front_postion"), 4);
-
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, backPositionRefractedTexture.GetTextureID());
-	glUniform1i(glGetUniformLocation(refractionShader.Program, "back_position"), 5);
-
-
-
-
-
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, frontFaceNormalTexture.GetTextureID());
 	glUniform1i(glGetUniformLocation(refractionShader.Program, "front_normal"), 2);
 
+	//
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, backFaceNormalTexture.GetTextureID());
 	glUniform1i(glGetUniformLocation(refractionShader.Program, "back_normal"), 3);
+
+	//
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, frontPositionTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(refractionShader.Program, "front_position"), 4);
+	//
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, backPositionRefractedTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(refractionShader.Program, "back_position"), 5);
+	
 	objects[0].Draw(refractionShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

@@ -33,6 +33,8 @@ class ForwardStage
 		GLuint debuggingFrameBufferID;
 		GLuint NDC_pointPatternBufferID;
 
+		Texture2D vDebugTexture, frontNormalDebugTexture;
+
 	public:
 		ForwardStage();
 		void Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);

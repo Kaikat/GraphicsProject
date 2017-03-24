@@ -14,19 +14,21 @@ in vec2 TexCoords;
 
 #define PI 3.14159265358979323
 
-uniform sampler2D front_depth;
-uniform sampler2D back_depth;
+uniform sampler2D front_depth; //
+uniform sampler2D back_depth; //
+
+uniform sampler2D front_normal; //
+uniform sampler2D back_normal;
 
 uniform sampler2D front_position;
 uniform sampler2D back_position;
 
-uniform sampler2D front_normal;
-uniform sampler2D back_normal;
+
 
 void main()
 {    
    // vec3 normal = normalize(Normal);
-    vec3 normal = normalize(texture(front_normal, TexCoords)).xyz;
+    vec3 normal = normalize(texture(front_normal, TexCoords).xyz);
     vec3 v = -FragPos;
     float angle_i = dot(normal, v);
     vec3 dN = -normal;
@@ -35,34 +37,47 @@ void main()
     vec3 temp = cross(dN, v);
     vec3 R2 = cross(temp, dN);
 
-    if(temp == vec3(0.0))
+   /* if(temp == vec3(0.0))
     {
          R2 = normalize(vec3(10.0,10.0, 0.0));
-    }
+    }*/
 
 //    R2 = normalize(vec3(10.0,10.0, 0.0));
 //    vec3 R2 = cross(cross(v, dN), dN);
 
-    if (acos(dot(R2, dN)) < 0)
-    {
-        R2 = -R2;
-    }
+   
 
-    float lengthDv = length(texture(back_position, TexCoords) - texture(front_position, TexCoords));
+    float lengthDv = abs(texture(back_position, TexCoords).z - texture(front_position, TexCoords).z);
     //float lengthDv = texture(back_depth, TexCoords).x - texture(front_depth, TexCoords).x;
 
     float angleT = asin(INDEX_OF_REFRACTION_AIR * sin(angle_i) / INDEX_OF_REFRACTION_WATER);
     
     //angleT = 60.0 * PI / 180.0;
-    vec3 T1 = (dN * cos(angleT)) + (R2 * sin(angleT)); //or opp ---------------------------
+    vec3 T1 = dN * cos(angleT) + R2 * sin(angleT); //or opp ---------------------------
        //  T1 = R2 * cos(angleT) + dN * sin(angleT);
 
     //T1 = normalize(vec3(10.0, 10.0, 0.0));
 
     vec3 P1 = FragPos; /////////////////////////////////////
-   // P1 = texture(front_position, TexCoords).xyz;
-    p1_object = P1 + (lengthDv * T1); //p2 in short paper, p1 in long paper
+    //vec3 P1 = texture(front_position, TexCoords).xyz;
+
+    //p1_object = P1 + (lengthDv * T1); //p2 in short paper, p1 in long paper
 
     //TODO: calculate p2_floor
-    p2_floor = p1_object;
+   // p2_floor = p1_object;
+
+   vec3 t1 = texture(front_position, TexCoords).xyz;
+   vec3 t2 = texture(back_position, TexCoords).xyz;
+   vec3 t3 = texture(back_normal, TexCoords).xyz;
+   vec3 t4 = texture(front_depth, TexCoords).xyz;
+   vec3 t5 = texture(back_depth, TexCoords).xyz;
+    p1_object =t4;//texture(front_depth, TexCoords).xyz;
+    p2_floor = t5;//texture(back_depth, TexCoords).xyz;
+
+    //p1_object = texture(front_position, TexCoords).xyz;
+    //p1_object = FragPos.xyz;
+    //p2_floor = texture(back_position, TexCoords).xyz;
+
+    //p1_object = normal;
+    //p2_floor = v;
 }
