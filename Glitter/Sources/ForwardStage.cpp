@@ -224,6 +224,8 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 	//Debugging Shader - Draw to screen for now
 	//glBindFramebuffer(GL_FRAMEBUFFER, debuggingFrameBufferID);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_DEPTH_TEST);
+
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	debuggingShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
@@ -257,14 +259,14 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMat
 
 
 
-
+	glEnable(GL_BLEND);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	dragonWireframeShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(dragonWireframeShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
 	glUniformMatrix4fv(glGetUniformLocation(dragonWireframeShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(dragonWireframeShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	objects[0].Draw(dragonWireframeShader);
-
+	glDisable(GL_BLEND);
 
 	glDisable(GL_DEPTH_TEST);
 }

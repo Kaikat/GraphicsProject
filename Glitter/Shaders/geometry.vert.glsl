@@ -13,7 +13,7 @@ uniform mat4 projection;
 
 out VS_OUT
 {
-    vec3 VertexPos; //in view space
+    vec4 VertexPos; //in view space
    // vec2 TexCoords; //in NDC (0 to 1)
 } vs_out;
 
@@ -26,5 +26,5 @@ void main()
     mat3 normalMatrix = transpose(inverse(mat3(view * model)));
     Normal = normalMatrix * normal;
 
-    vs_out.VertexPos = (projection * viewPos).xyz;
+    vs_out.VertexPos = projection * viewPos;
 }

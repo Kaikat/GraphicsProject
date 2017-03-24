@@ -152,7 +152,9 @@ void main()
 //else
 //{
     //p1_object = FragPos + refractionDir;
+    //p1_object = vec4(startPoint, 1.0);
     p1_object = startPoint;
+
     p2_floor = p1_object;
 //}
 
