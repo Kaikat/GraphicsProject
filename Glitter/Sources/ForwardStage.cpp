@@ -24,7 +24,12 @@ ForwardStage::ForwardStage()
 	sceneDepthTexture.CreateTexture(mWidth, mHeight, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, sceneDepthTexture.GetTextureID(), 0);
 	glDrawBuffer(GL_DEPTH_ATTACHMENT);
+
+	scenePositionTexture.CreateTexture(mWidth, mHeight, GL_RGB16F, GL_RGB, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, scenePositionTexture.GetTextureID(), 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 	sceneDepthTexture.PrintID("sceneDepthTexture");
+	scenePositionTexture.PrintID("scenePositionTexture");
 
 	//Front of object
 	glGenFramebuffers(1, &transparentObjectFrontFrameBufferID);
@@ -230,6 +235,14 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, Object scene, glm
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D, backPositionRefractedTexture.GetTextureID());
 	glUniform1i(glGetUniformLocation(refractionShader.Program, "back_position"), 5);
+
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, sceneDepthTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(refractionShader.Program, "scene_depth"), 6);
+
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, scenePositionTexture.GetTextureID());
+	glUniform1i(glGetUniformLocation(refractionShader.Program, "scene_position"), 7);
 	
 	objects[0].Draw(refractionShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -243,6 +256,7 @@ void ForwardStage::Pass(Light *lights, vector<Object> objects, Object scene, glm
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	debuggingShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(objects[0].GetModelMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "sceneModel"), 1, GL_FALSE, glm::value_ptr(scene.GetModelMatrix()));
 	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "lightView"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "cameraView"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(debuggingShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));

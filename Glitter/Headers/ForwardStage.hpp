@@ -20,7 +20,7 @@ class ForwardStage
 		GLuint transparentObjectFrontFrameBufferID, transparentObjectBackFrameBufferID;
 		GLuint refractionFrameBufferID;
 
-		Texture2D sceneDepthTexture;
+		Texture2D sceneDepthTexture, scenePositionTexture;
 		Texture2D frontDepthTexture, backDepthTexture;
 		Texture2D frontPositionTexture, backPositionRefractedTexture;
 		Texture2D frontFaceNormalTexture, backFaceNormalTexture;

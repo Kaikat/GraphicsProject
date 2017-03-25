@@ -1,6 +1,6 @@
 #version 330 core
 layout (points) in;
-layout (line_strip, max_vertices = 6) out;
+layout (line_strip, max_vertices = 8) out;
 
 in VS_OUT
 {
@@ -21,6 +21,7 @@ uniform sampler2D p1_normal;
 //uniform sampler2D p2_normal;
 
 uniform mat4 model;
+uniform mat4 sceneModel;
 uniform mat4 cameraView;
 uniform mat4 lightView;
 uniform mat4 projection;
@@ -29,7 +30,7 @@ const vec3 red = vec3(1.0, 0.0, 0.0);
 const vec3 orange = vec3(1.0, 153.0/255.0, 0.0);
 const vec3 yellow = vec3(1.0, 1.0, 0.0);
 const vec3 green = vec3(0.0, 1.0, 0.0);
-const vec3 blue = vec3(0.0, 0.0, 1.0);
+const vec3 blue = vec3(50.0/255.0, 208.0/255.0, 1.0);
 
 void main()
 {
@@ -51,8 +52,14 @@ void main()
 
    /* */
 
+    //make sure that p1 and p2 are valid and that they actually hit some other geometry
+   // vec3 p2Check = inverse(sceneModel * view) * 
+   vec3 errorPoint = vec3(-8.672, -6.504, -15.719);
+   float errorDistance = length(texture(p2_point, gs_in[0].TexCoords).xyz - errorPoint);
 
-    if (texture(p1_point, gs_in[0].TexCoords).xyz != vec3(0.0))
+    if (texture(p1_point, gs_in[0].TexCoords).xyz != vec3(0.0) && errorDistance > 1.0 )// &&
+       // texture(p2_point, gs_in[0].TexCoords).xyz != vec3(0.0))
+     //if (texture(p1_normal, gs_in[0].TexCoords).xyz != vec3(0.0))
     {
         //normals per point
         fragmentColor = red;
@@ -86,9 +93,19 @@ void main()
         EmitVertex();
 
         EndPrimitive();
+
+        //second object point to scene object point
+        fragmentColor = blue;
+
+        gl_Position = point1;
+        EmitVertex();
+
+        gl_Position = point2;
+        EmitVertex();
+
+        EndPrimitive();
     }
 
-    //second object point to scene object point
 
     //EndPrimitive();
 }

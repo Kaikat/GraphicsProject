@@ -13,7 +13,15 @@ void main()
 {
     vec4 viewPos = view * model * vec4(position, 1.0f);
     gl_Position = projection * viewPos;
+
+    //if(position == vec3(0.0))
+    //{
+     //   FragPos = vec3(0.0);
+    //}
+    //else
+    //{
     FragPos = viewPos.xyz;
+    //}
     mat3 normalMatrix = transpose(inverse(mat3(view * model)));
     Normal = normalMatrix * normal;
 }

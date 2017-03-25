@@ -10,7 +10,7 @@ in vec2 TexCoords;
 //in vec3 Normal;
 
 #define INDEX_OF_REFRACTION_AIR 1.00029
-#define INDEX_OF_REFRACTION_WATER 2.0
+#define INDEX_OF_REFRACTION_WATER 1.33
 
 #define PI 3.14159265358979323
 
@@ -23,9 +23,15 @@ uniform sampler2D back_normal;
 uniform sampler2D front_position;
 uniform sampler2D back_position;
 
+uniform sampler2D scene_depth;
+uniform sampler2D scene_position;
+
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+
+
+
 
 vec4 refraction(vec3 incident, vec3 normal, float ni_nt, float ni_nt_sqr )
 {
@@ -110,7 +116,6 @@ void main()
 
     //float refractiveRatio = INDEX_OF_REFRACTION_AIR / INDEX_OF_REFRACTION_WATER;
     float refractiveRatio = INDEX_OF_REFRACTION_WATER / INDEX_OF_REFRACTION_AIR;
-
     vec3 refractionDir = refraction(-FragPos, normal, refractiveRatio, refractiveRatio * refractiveRatio).xyz;
 
     /*vec3 vv = normalize(v);
@@ -166,7 +171,93 @@ vec4 calcDepth;
 
     //p1_object = startPoint;
     p1_object = texture(back_position, calcDepth.xy).xyz;
-    p2_floor = p1_object;
+
+
+
+
+
+
+
+
+
+
+
+
+
+    float refractiveRatio2 = INDEX_OF_REFRACTION_AIR / INDEX_OF_REFRACTION_WATER;
+    //float refractiveRatio2 = INDEX_OF_REFRACTION_WATER / INDEX_OF_REFRACTION_AIR;
+    vec3 refractionDir22 = refraction(-p1_object.xyz, texture(back_normal, calcDepth.xy).xyz, refractiveRatio2, refractiveRatio2 * refractiveRatio2).xyz;
+    
+    
+    
+   /* vec3 p1Normal = normalize(texture(back_normal, calcDepth.xy).xyz);
+    float aang = acos(dot(refractionDir22, -p1Normal));
+   
+    aang = aang * (180.0 / PI);
+    if (aang > 90.0)
+    {
+        refractionDir22 = -refractionDir22;
+    }*/
+    
+    
+    
+    
+    vec3 startPoint2 = p1_object;
+    vec3 direction22 = normalize(refractionDir22);
+
+    float currentDepth22 = calculatedBackDepth;
+    float calculatedBackDepth22 = texture(scene_depth, calcDepth.xy).x;
+    
+    vec4 calcDepth22;
+    //back depth is bigger than front_depth
+    for (float i = 0; i < 0.5 && currentDepth22 < calculatedBackDepth22; i+= STEP)
+    {
+        startPoint2 = startPoint2 + (STEP * direction22);
+        //Convert this new point to depth
+        calcDepth22 = projection * vec4(startPoint2, 1.0);
+        calcDepth22 = calcDepth22 / calcDepth22.w;
+        calcDepth22 = (calcDepth22 + 1.0) / 2.0;
+        currentDepth22 = calcDepth22.z;
+
+        calculatedBackDepth22 = texture(scene_depth, calcDepth22.xy).x;
+    }
+
+
+
+    vec3 p1Normal = normalize(texture(back_normal, calcDepth.xy).xyz);
+    float aang = acos(dot(refractionDir22, -p1Normal));
+   
+  /*  aang = aang * (180.0 / PI);
+    if (aang > 90.0 && aang < 270.0)
+    {
+        //refractionDir22 = -refractionDir22;
+        p2_floor = p1_object;
+    }
+    else
+    {
+
+            p2_floor = texture(scene_position, calcDepth22.xy).xyz;
+
+    }*/
+    
+    /*if (acos(dot(refractionDir22, -p1Normal)) < 0.0)
+    {
+        p2_floor = p1_object;
+    }
+    else
+    {
+        p2_floor = texture(scene_position, calcDepth22.xy).xyz;
+    }*/
+
+   // if (texture(back_normal, calcDepth.xy).xyz == vec3(0.0))
+   
+            p2_floor = texture(scene_position, calcDepth22.xy).xyz;
+    
+}
+
+
+
+
 //}
 
    // p1_object =t4;//texture(front_depth, TexCoords).xyz;
@@ -178,4 +269,3 @@ vec4 calcDepth;
 
     //p1_object = normal;
     //p2_floor = v;
-}
