@@ -57,7 +57,7 @@ void Renderer::Render()
 
 	geometryStage->Pass(worldObject, view, projection);
 	lightingStage->Pass(lights, worldObject, view, projection, *geometryStage);
-	forwardStage->Pass(lights, sceneObjects, view, projection, *geometryStage);
+	forwardStage->Pass(lights, sceneObjects, worldObject, view, projection, *geometryStage);
 }
 
 void Renderer::Update(float deltaTime)

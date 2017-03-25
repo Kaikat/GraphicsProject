@@ -36,7 +36,9 @@ class ForwardStage
 		Shader dragonWireframeShader, dragonTransparentShader;
 		Texture2D vDebugTexture, frontNormalDebugTexture;
 
+		//Shader sceneDepthShader;
+
 	public:
 		ForwardStage();
-		void Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
+		void Pass(Light *lights, vector<Object> objects, Object scene, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage);
 };

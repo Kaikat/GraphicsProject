@@ -12,6 +12,15 @@ ForwardStage::ForwardStage()
 	//Scene Depth
 	glGenFramebuffers(1, &sceneDepthFrameBufferID);
 	glBindFramebuffer(GL_FRAMEBUFFER, sceneDepthFrameBufferID);
+
+
+	
+	/*
+	glGenRenderbuffers(1, &depthBufferID);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthBufferID);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, mWidth, mHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBufferID);
+	*/
 	sceneDepthTexture.CreateTexture(mWidth, mHeight, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, sceneDepthTexture.GetTextureID(), 0);
 	glDrawBuffer(GL_DEPTH_ATTACHMENT);
@@ -116,22 +125,27 @@ ForwardStage::ForwardStage()
 
 	dragonTransparentShader = Shader(FileSystem::getPath("Shaders/geometry.vert.glsl").c_str(),
 		FileSystem::getPath("Shaders/geometryTransparent.frag.glsl").c_str());
+
+	//sceneDepthShader = Shader(FileSystem::getPath("Shaders/geometryStage.vert.glsl").c_str(),
+		//FileSystem::getPath("Shaders/geometryStage.frag.glsl").c_str());
 }
 
-void ForwardStage::Pass(Light *lights, vector<Object> objects, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
+void ForwardStage::Pass(Light *lights, vector<Object> objects, Object scene, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, GeometryStage geometryStage)
 {
 	glm::mat4 view;
 	view = glm::lookAt(lights[0].Position(), objects[0].Position, glm::vec3(0.0, 1.0, 0.0));
 
+	//scene depth
+	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, sceneDepthFrameBufferID);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	transparentObjectShader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(scene.GetModelMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(transparentObjectShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	scene.Draw(transparentObjectShader);
+	glDisable(GL_DEPTH_TEST);
 
-	//Load the scene depth buffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, geometryStage.GetGBufferID());
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneDepthFrameBufferID);
-	glBlitFramebuffer(0, 0, mWidth, mHeight, 0, 0, mWidth, mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
 
 
 
