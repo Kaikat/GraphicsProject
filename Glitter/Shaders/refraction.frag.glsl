@@ -30,37 +30,18 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-
-
-
-vec4 refraction(vec3 incident, vec3 normal, float ni_nt, float ni_nt_sqr )
+vec4 refraction(vec3 incident, vec3 normal, float ni_nt)
 {
-// vec4 returnVal;
-incident = normalize(incident);
-normal = normalize(normal);
+    float ni_nt_sqr = ni_nt * ni_nt;
+    incident = normalize(incident);
+    normal = normalize(normal);
 
-float IdotN = dot( incident, normal );
-float cosSqr = 1.0 - ni_nt_sqr*(1.0 - IdotN*IdotN);
-return ( cosSqr <= 0.0 ? 
-vec4( reflect( incident, normal ).xyz, -1 ) : 
--vec4( normalize( ni_nt * incident + (ni_nt * IdotN - sqrt( cosSqr )) * normal ).xyz, 1) 
-  ); 
-
-  /*
-  vec4 returnVal;
-float IdotN = dot( -incident, normal );
-float cosSqr = 1.0 - ni_nt_sqr*(1.0 - IdotN*IdotN);
-return vec4(normalize( ni_nt * incident + (ni_nt * IdotN - sqrt( cosSqr )) * normal ).xyz, 1.0);
-
-*/
-//( cosSqr <= 0.0 ? 
-//vec4( reflect( incident, normal ).xyz, -1 ) : 
-//vec4( normalize( ni_nt * incident + (ni_nt * IdotN - sqrt( cosSqr )) * normal ).xyz, 1) 
- // ); 
- /* float cosI = dot(normal, -incident);
-  float sinT2 = ni_nt_sqr * (1.0 - cosI * cosI);
-  float cosT = sqrt(1.0 - sinT2);
-  return vec4(ni_nt * incident + (ni_nt * cosI - cosT) * normal, 1.0);*/
+    float IdotN = dot( incident, normal );
+    float cosSqr = 1.0 - ni_nt_sqr * (1.0 - IdotN * IdotN);
+    return ( cosSqr <= 0.0 ? 
+        vec4(reflect(incident, normal).xyz, -1) : 
+        -vec4(normalize(ni_nt * incident + (ni_nt * IdotN - sqrt(cosSqr)) * normal).xyz, 1) 
+    ); 
 }
 
 void main()
@@ -74,19 +55,6 @@ void main()
     //calculate vector that is perpendicular to dN and in the same "2D plane"
     vec3 temp = cross(dN, v);
     vec3 R2 = cross(temp, dN);
-
-
-    
-
-   /* if(temp == vec3(0.0))
-    {
-         R2 = normalize(vec3(10.0,10.0, 0.0));
-    }*/
-
-//    R2 = normalize(vec3(10.0,10.0, 0.0));
-//    vec3 R2 = cross(cross(v, dN), dN);
-
-   
 
     float lengthDv = abs(texture(back_position, TexCoords).z - texture(front_position, TexCoords).z);
     //float lengthDv = texture(back_depth, TexCoords).x - texture(front_depth, TexCoords).x;
@@ -116,7 +84,7 @@ void main()
 
     //float refractiveRatio = INDEX_OF_REFRACTION_AIR / INDEX_OF_REFRACTION_WATER;
     float refractiveRatio = INDEX_OF_REFRACTION_WATER / INDEX_OF_REFRACTION_AIR;
-    vec3 refractionDir = refraction(-FragPos, normal, refractiveRatio, refractiveRatio * refractiveRatio).xyz;
+    vec3 refractionDir = refraction(-FragPos, normal, refractiveRatio).xyz;
 
     /*vec3 vv = normalize(v);
     if (acos(dot(refractionDir, vv)) < 0.0)
@@ -186,7 +154,7 @@ vec4 calcDepth;
 
     float refractiveRatio2 = INDEX_OF_REFRACTION_AIR / INDEX_OF_REFRACTION_WATER;
     //float refractiveRatio2 = INDEX_OF_REFRACTION_WATER / INDEX_OF_REFRACTION_AIR;
-    vec3 refractionDir22 = refraction(-p1_object.xyz, texture(back_normal, calcDepth.xy).xyz, refractiveRatio2, refractiveRatio2 * refractiveRatio2).xyz;
+    vec3 refractionDir22 = refraction(-p1_object.xyz, texture(back_normal, calcDepth.xy).xyz, refractiveRatio2).xyz;
     
     
     
@@ -227,32 +195,7 @@ vec4 calcDepth;
     vec3 p1Normal = normalize(texture(back_normal, calcDepth.xy).xyz);
     float aang = acos(dot(refractionDir22, -p1Normal));
    
-  /*  aang = aang * (180.0 / PI);
-    if (aang > 90.0 && aang < 270.0)
-    {
-        //refractionDir22 = -refractionDir22;
-        p2_floor = p1_object;
-    }
-    else
-    {
-
-            p2_floor = texture(scene_position, calcDepth22.xy).xyz;
-
-    }*/
-    
-    /*if (acos(dot(refractionDir22, -p1Normal)) < 0.0)
-    {
-        p2_floor = p1_object;
-    }
-    else
-    {
-        p2_floor = texture(scene_position, calcDepth22.xy).xyz;
-    }*/
-
-   // if (texture(back_normal, calcDepth.xy).xyz == vec3(0.0))
-   
-            p2_floor = texture(scene_position, calcDepth22.xy).xyz;
-    
+    p2_floor = texture(scene_position, calcDepth22.xy).xyz;   
 }
 
 
