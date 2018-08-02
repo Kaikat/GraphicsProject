@@ -1,4 +1,6 @@
 # Real Time God Rays
+![Screenshot](https://github.com/Kaikat/GraphicsProject/blob/master/banner.png?raw=true)
+
 To see a detailed explanation of this project and it's results please look at RealTimeGodRays.pdf in the files above.
 
 --- Below is the readme that came with the starter code for this project. ---
