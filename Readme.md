@@ -1,7 +1,7 @@
-# Real Time God Rays
+# Light Rays through a Water Dragon
 ![Screenshot](https://github.com/Kaikat/GraphicsProject/blob/master/banner.png?raw=true)
 
-To see a detailed explanation of this project and it's results please look at RealTimeGodRays.pdf in the files above.
+To see a detailed explanation of this project and its results please look at LightRaysThroughAWaterDragon.pdf in the files above.
 
 --- Below is the readme that came with the starter code for this project. ---
 
